@@ -1,5 +1,5 @@
 {
-  "name": "fluora-payments",
+  "name": "monetized-mcp",
   "version": "0.1.0",
   "main": "dist/index.js",
   "files": [
@@ -9,9 +9,6 @@
     "build": "npx tsc --outDir dist"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "0.6.0",
-    "axios": "^1.8.4",
-    "dotenv": "^16.4.7",
     "web3": "^4.5.0",
     "web3-eth-accounts": "^4.3.1"
   },
