@@ -1,6 +1,6 @@
 # Monetized MCP
 
-A TypeScript utility library for handling payments on multiple EVM-compatible networks. This library provides tools for sending and verifying payments using Web3, supporting both native tokens (like ETH) and ERC20 tokens.
+A TypeScript utility library for handling payments on Base Sepolia testnet. This library provides tools for sending and verifying payments using Web3, supporting both native tokens (like ETH) and ERC20 tokens.
 
 ## Installation
 
@@ -30,8 +30,7 @@ const result = await payments.sendPayment(
   1.5, // amount
   '0xDestinationAddress', // destination wallet address
   '0xYourWalletAddress', // sender wallet address
-  Currency.ETH, // currency to send
-  'base-sepolia' // optional: chain to use (default: 'base-sepolia')
+  Currency.ETH // currency to send
 );
 
 // Verify a payment
@@ -43,12 +42,9 @@ const verification = await payments.verifyPayment(
 );
 ```
 
-## Supported Networks
+## Network
 
-- Base Sepolia (base-sepolia)
-- Base Mainnet (base)
-- Ethereum Mainnet (ethereum)
-- Ethereum Sepolia (sepolia)
+This library operates exclusively on the Base Sepolia testnet (Chain ID: 84532). Base Sepolia is a test environment for the Base network, which is a Layer 2 blockchain built on Ethereum.
 
 ## Supported Currencies
 
@@ -62,7 +58,7 @@ const verification = await payments.verifyPayment(
 
 ### `PaymentsTools`
 
-Main class for handling payments.
+Main class for handling payments on Base Sepolia.
 
 #### Constructor
 ```typescript
@@ -72,15 +68,14 @@ Initializes the Web3 instance and sets up the local wallet using the private key
 
 #### Methods
 
-##### `sendPayment(amount: number, destinationWalletAddress: string, localWalletAddress: string, currency: Currency, chain?: string)`
-Sends a payment to the specified destination address.
+##### `sendPayment(amount: number, destinationWalletAddress: string, localWalletAddress: string, currency: Currency)`
+Sends a payment to the specified destination address on Base Sepolia.
 
 Parameters:
 - `amount`: Amount to send
 - `destinationWalletAddress`: Recipient's wallet address
 - `localWalletAddress`: Sender's wallet address
 - `currency`: Currency to send (ETH, USDC, etc.)
-- `chain`: Optional blockchain network to use (default: 'base-sepolia')
 
 Returns:
 ```typescript
@@ -91,7 +86,7 @@ Promise<{
 ```
 
 ##### `verifyPayment(hash: string, amount: number, currency: Currency, destinationWalletAddress: string)`
-Verifies if a payment transaction was successful and matches the expected parameters.
+Verifies if a payment transaction was successful and matches the expected parameters on Base Sepolia.
 
 Parameters:
 - `hash`: Transaction hash to verify
@@ -114,7 +109,7 @@ The library includes comprehensive error handling for transactions. Failed trans
 ## Future Improvements
 
 This is currently a basic utility library. Future improvements could include:
-- Support for more networks
+- Support for Base Mainnet
 - Support for more token standards
 - Gas optimization
 - Transaction batching

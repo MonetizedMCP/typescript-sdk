@@ -32,8 +32,7 @@ interface ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string,
-    currency: Currency,
-    chain?: string
+    currency: Currency
   ): Promise<{ resultMessage: string; hash: string }>;
   verifyPayment(
     hash: string,
@@ -43,16 +42,9 @@ interface ITools {
   ): Promise<{ success: boolean; message: string }>;
 }
 
-const rpcUrls: { [key: string]: string } = {
-  'base-sepolia': 'https://sepolia.base.org',
-  base: 'https://mainnet.base.org',
-  ethereum: 'https://eth.llamarpc.com',
-  sepolia: 'https://rpc.sepolia.org',
-};
-
 export class PaymentsTools implements ITools {
   private w3: Web3;
-  private localWalletAddress: string;
+  private readonly BASE_SEPOLIA_RPC = 'https://sepolia.base.org';
 
   /**
    * Initializes the PaymentsTools class with Web3 instance and local wallet configuration.
@@ -60,22 +52,20 @@ export class PaymentsTools implements ITools {
    * from environment variables.
    */
   constructor() {
-    this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrls['base-sepolia']));
-    const LOCAL_WALLET_PRIVATE_KEY = process.env.LOCAL_WALLET_PRIVATE_KEY;
+    this.w3 = new Web3(new Web3.providers.HttpProvider(this.BASE_SEPOLIA_RPC));
+    const localWalletPrivateKey = process.env.LOCAL_WALLET_PRIVATE_KEY;
     const localWallet = privateKeyToAccount(
-      Uint8Array.from(Buffer.from(LOCAL_WALLET_PRIVATE_KEY!, 'hex'))
+      Uint8Array.from(Buffer.from(localWalletPrivateKey!, 'hex'))
     );
     this.w3.eth.accounts.wallet.add(localWallet);
-    this.localWalletAddress = localWallet.address;
   }
 
   /**
-   * Sends a payment transaction to a specified destination address.
+   * Sends a payment transaction to a specified destination address on Base Sepolia.
    * @param {number} amount - The amount to send
    * @param {string} destinationWalletAddress - The recipient's wallet address
    * @param {string} localWalletAddress - The sender's wallet address
    * @param {Currency} currency - The currency to send (ETH, USDC, etc.)
-   * @param {string} chain - The blockchain network to use (default: 'base-sepolia')
    * @returns {Promise<{resultMessage: string, hash: string}>} An object containing:
    *   - resultMessage: A string describing the transaction result or error
    *   - hash: The transaction hash if successful, empty string if failed
@@ -84,13 +74,9 @@ export class PaymentsTools implements ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string,
-    currency: Currency,
-    chain: string = 'base-sepolia'
+    currency: Currency
   ): Promise<{ resultMessage: string; hash: string }> {
     try {
-      const rpcUrl = rpcUrls[chain] || rpcUrls['base-sepolia'];
-      this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
-
       const currencyDetails = CURRENCY_DETAILS[currency];
       const amountWei = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
 
@@ -150,7 +136,7 @@ export class PaymentsTools implements ITools {
   }
 
   /**
-   * Verifies if a payment transaction was successful by checking its status and amount on the blockchain.
+   * Verifies if a payment transaction was successful by checking its status and amount on Base Sepolia.
    * @param {string} hash - The transaction hash to verify
    * @param {number} amount - The expected amount that should have been transferred
    * @param {Currency} currency - The currency that should have been transferred
