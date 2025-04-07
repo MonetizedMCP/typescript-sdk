@@ -6,7 +6,7 @@ interface ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
-  ): Promise<{ toolResult: string; hash: string }>;
+  ): Promise<{ resultMessage: string; hash: string }>;
   verifyPayment(hash: string): Promise<boolean>;
 }
 
@@ -32,7 +32,7 @@ export class PaymentsTools implements ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
-  ): Promise<{ toolResult: string; hash: string }> {
+  ): Promise<{ resultMessage: string; hash: string }> {
     try {
       const amountWei = BigInt(Math.floor(amount * 10 ** 6));
 
@@ -55,11 +55,11 @@ export class PaymentsTools implements ITools {
       const receipt = await this.w3.eth.sendSignedTransaction(signedTx.rawTransaction!);
 
       return {
-        toolResult: `Transaction sent: ${receipt.transactionHash}`,
+        resultMessage: `Transaction sent: ${receipt.transactionHash}`,
         hash: receipt.transactionHash.toString(),
       };
     } catch (error: any) {
-      return { toolResult: 'Error: ' + error.message, hash: '' };
+      return { resultMessage: 'Error: ' + error.message, hash: '' };
     }
   }
 
