@@ -1,14 +1,13 @@
 import { Web3 } from 'web3';
 import { privateKeyToAccount } from 'web3-eth-accounts';
-import axios from 'axios';
 
 interface ITools {
-  getBalance(localWalletAddress: string): Promise<string>;
-  makePayment(
+  sendPayment(
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
   ): Promise<{ toolResult: string; hash: string }>;
+  verifyPayment(hash: string): Promise<boolean>;
 }
 
 export class PaymentsTools implements ITools {
@@ -29,31 +28,7 @@ export class PaymentsTools implements ITools {
     return this.localWalletAddress;
   }
 
-  private async getETHPrice(): Promise<number> {
-    try {
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-      );
-      return response.data.ethereum.usd; // Returns ETH price in USD
-    } catch (error) {
-      console.error('Error fetching ETH price:', error);
-      throw error;
-    }
-  }
-
-  async getBalance(localWalletAddress: string): Promise<string> {
-    try {
-      const balance = await this.w3.eth.getBalance(localWalletAddress);
-      const balanceInETH = this.w3.utils.fromWei(balance, 'ether');
-      const ethPriceInUSD = await this.getETHPrice();
-      const balanceInUSDC = parseFloat(balanceInETH) * ethPriceInUSD;
-      return balanceInUSDC.toFixed(2) + ' USDC';
-    } catch (error: any) {
-      return 'Error: ' + error.message;
-    }
-  }
-
-  async makePayment(
+  async sendPayment(
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
@@ -89,7 +64,14 @@ export class PaymentsTools implements ITools {
   }
 
   async verifyPayment(hash: string): Promise<boolean> {
-    const receipt = await this.w3.eth.getTransactionReceipt(hash);
-    return receipt.status === 1n;
+    try {
+      if (!hash) {
+        return false;
+      }
+      const receipt = await this.w3.eth.getTransactionReceipt(hash);
+      return receipt.status === 1n;
+    } catch (error: any) {
+      return false;
+    }
   }
 }
