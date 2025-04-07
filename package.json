@@ -1,0 +1,22 @@
+{
+  "name": "fluora-payments",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npx tsc --outDir dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.6.0",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "web3": "^4.5.0",
+    "web3-eth-accounts": "^4.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "typescript": "^5.8.3"
+  }
+}
