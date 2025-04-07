@@ -1,6 +1,6 @@
-# Fluora Payments SDK
+# Fluora Payments Utility
 
-A TypeScript SDK for handling payments on the Base network (Sepolia testnet). This SDK provides tools for sending and verifying payments using Web3.
+A TypeScript utility library for handling payments on the Base network (Sepolia testnet). This library provides basic tools for sending and verifying payments using Web3.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install fluora-payments
 
 ## Configuration
 
-Before using the SDK, you need to set up your environment variables:
+Before using the library, you need to set up your environment variables:
 
 ```env
 LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
@@ -88,11 +88,21 @@ Promise<boolean>
 
 ## Network
 
-This SDK currently operates on the Base Sepolia testnet. The RPC URL is set to `https://sepolia.base.org`.
+This library currently operates on the Base Sepolia testnet. The RPC URL is set to `https://sepolia.base.org`.
 
 ## Error Handling
 
-The SDK includes basic error handling for transactions. Failed transactions will return appropriate error messages in the `toolResult` field.
+The library includes basic error handling for transactions. Failed transactions will return appropriate error messages in the `toolResult` field.
+
+## Future Improvements
+
+This is currently a basic utility library. Future improvements could include:
+- Support for multiple networks
+- More comprehensive error handling
+- Additional payment-related functionality
+- Configuration options
+- Testing suite
+- More detailed documentation
 
 ## License
 
