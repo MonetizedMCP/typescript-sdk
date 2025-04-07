@@ -4,7 +4,7 @@ import axios from 'axios';
 
 interface ITools {
   getBalance(localWalletAddress: string): Promise<string>;
-  transfer(
+  makePayment(
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
@@ -53,7 +53,7 @@ export class PaymentsTools implements ITools {
     }
   }
 
-  async transfer(
+  async makePayment(
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string
@@ -86,5 +86,10 @@ export class PaymentsTools implements ITools {
     } catch (error: any) {
       return { toolResult: 'Error: ' + error.message, hash: '' };
     }
+  }
+
+  async verifyPayment(hash: string): Promise<boolean> {
+    const receipt = await this.w3.eth.getTransactionReceipt(hash);
+    return receipt.status === 1n;
   }
 }
