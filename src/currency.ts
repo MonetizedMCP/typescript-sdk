@@ -34,11 +34,5 @@ export const CURRENCY_DETAILS: Record<Currency, {
     decimals: 18,
     isNative: false,
     address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb' // Base Mainnet DAI
-  },
-  [Currency.WETH]: {
-    name: 'Wrapped Ethereum',
-    decimals: 18,
-    isNative: false,
-    address: '0x4200000000000000000000000000000000000006' // Base Mainnet WETH
   }
 };
