@@ -1,6 +1,6 @@
 {
   "name": "monetized-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -15,5 +15,20 @@
   "devDependencies": {
     "@types/node": "^20.17.30",
     "typescript": "^5.8.3"
-  }
+  },
+  "description": "A TypeScript utility library for handling payments.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MonetizedMCP/typescript-sdk.git"
+  },
+  "keywords": [
+    "MCP"
+  ],
+  "author": "GuilhermeSantosPlank",
+  "license": "ISC",
+  "types": "./dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/MonetizedMCP/typescript-sdk/issues"
+  },
+  "homepage": "https://github.com/MonetizedMCP/typescript-sdk#readme"
 }

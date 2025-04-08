@@ -178,7 +178,6 @@ export class PaymentsTools implements ITools {
       const expectedAmount = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
 
       if (currencyDetails.isNative) {
-        // For native currency (ETH)
         const transaction = await this.w3.eth.getTransaction(hash);
         if (transaction.to?.toLowerCase() !== destinationWalletAddress.toLowerCase()) {
           return { success: false, message: 'Incorrect destination address' };
@@ -190,7 +189,6 @@ export class PaymentsTools implements ITools {
 
         return { success: true, message: 'Payment verified successfully' };
       } else {
-        // For ERC20 tokens
         if (!currencyDetails.address) {
           return { success: false, message: 'Token contract address not found' };
         }
