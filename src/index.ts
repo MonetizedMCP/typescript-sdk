@@ -1,7 +1,7 @@
 import { Web3 } from 'web3';
 import { privateKeyToAccount } from 'web3-eth-accounts';
 import { Currency, CURRENCY_DETAILS } from './currency';
-import { PaymentRail } from './payment-rail';
+import { PaymentMethod } from './payment-method';
 
 // ERC20 ABI for token transfers
 const ERC20_ABI = [
@@ -33,37 +33,55 @@ interface ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string,
-    currency: Currency,
-    paymentRail: PaymentRail
+    paymentMethod: PaymentMethod
   ): Promise<{ resultMessage: string; hash: string }>;
   verifyPayment(
     hash: string,
     amount: number,
-    currency: Currency,
-    destinationWalletAddress: string,
-    paymentRail: PaymentRail
+    paymentMethod: PaymentMethod,
+    destinationWalletAddress: string
   ): Promise<{ success: boolean; message: string }>;
 }
 
-const rpcUrls: { [key in PaymentRail]: string } = {
-  [PaymentRail.BASE_SEPOLIA]: 'https://sepolia.base.org',
-  [PaymentRail.BASE_MAINNET]: 'https://mainnet.base.org',
-  [PaymentRail.ETHEREUM]: 'https://mainnet.infura.io/v3/',
-  [PaymentRail.POLYGON]: 'https://polygon-rpc.com',
-  [PaymentRail.ARBITRUM]: 'https://arb1.arbitrum.io/rpc',
-  [PaymentRail.OPTIMISM]: 'https://mainnet.optimism.io'
+// RPC URLs for different chains
+const rpcUrls: { [key: string]: string } = {
+  'base-sepolia': 'https://sepolia.base.org',
+  'base-mainnet': 'https://mainnet.base.org',
+  'solana': '' // TODO: Add Solana RPC URL
+};
+
+// Mapping of payment methods to their respective chains
+const paymentMethodToChain: { [key in PaymentMethod]: string } = {
+  [PaymentMethod.ETH_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethod.USDC_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethod.USDT_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethod.ETH_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethod.USDC_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethod.USDT_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethod.SOL_SOLANA]: 'solana',
+  [PaymentMethod.USDC_SOLANA]: 'solana',
+  [PaymentMethod.USDT_SOLANA]: 'solana'
+};
+
+// Mapping of payment methods to their respective currencies
+const paymentMethodToCurrency: { [key in PaymentMethod]: Currency } = {
+  [PaymentMethod.ETH_BASE_SEPOLIA]: Currency.ETH,
+  [PaymentMethod.USDC_BASE_SEPOLIA]: Currency.USDC,
+  [PaymentMethod.USDT_BASE_SEPOLIA]: Currency.USDT,
+  [PaymentMethod.ETH_BASE_MAINNET]: Currency.ETH,
+  [PaymentMethod.USDC_BASE_MAINNET]: Currency.USDC,
+  [PaymentMethod.USDT_BASE_MAINNET]: Currency.USDT,
+  [PaymentMethod.SOL_SOLANA]: Currency.SOL,
+  [PaymentMethod.USDC_SOLANA]: Currency.USDC,
+  [PaymentMethod.USDT_SOLANA]: Currency.USDT
 };
 
 export class PaymentsTools implements ITools {
   private w3: Web3;
   private localWalletPrivateKey: string;
-  /**
-   * Initializes the PaymentsTools class with Web3 instance and local wallet configuration.
-   * Sets up the connection to Base Sepolia testnet and configures the wallet using the private key
-   * from environment variables.
-   */
+
   constructor() {
-    this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrls[PaymentRail.BASE_SEPOLIA]));
+    this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrls['base-sepolia']));
     this.localWalletPrivateKey = process.env.LOCAL_WALLET_PRIVATE_KEY!;
     const localWallet = privateKeyToAccount(
       Uint8Array.from(Buffer.from(this.localWalletPrivateKey, 'hex'))
@@ -81,8 +99,7 @@ export class PaymentsTools implements ITools {
    * @param {number} amount - The amount to send
    * @param {string} destinationWalletAddress - The recipient's wallet address
    * @param {string} localWalletAddress - The sender's wallet address
-   * @param {Currency} currency - The currency to send (ETH, USDC, etc.)
-   * @param {PaymentRail} paymentRail - The payment rail to use for the transaction
+   * @param {PaymentMethod} paymentMethod - The payment method to use (e.g., USDC_BASE_SEPOLIA)
    * @returns {Promise<{resultMessage: string, hash: string}>} An object containing:
    *   - resultMessage: A string describing the transaction result or error
    *   - hash: The transaction hash if successful, empty string if failed
@@ -91,11 +108,14 @@ export class PaymentsTools implements ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string,
-    currency: Currency,
-    paymentRail: PaymentRail
+    paymentMethod: PaymentMethod
   ): Promise<{ resultMessage: string; hash: string }> {
     try {
-      const rpcUrl = rpcUrls[paymentRail];
+      const chain = paymentMethodToChain[paymentMethod];
+      const currency = paymentMethodToCurrency[paymentMethod];
+      
+      // Connect to the appropriate chain
+      const rpcUrl = rpcUrls[chain];
       this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
       const currencyDetails = CURRENCY_DETAILS[currency];
@@ -204,12 +224,11 @@ export class PaymentsTools implements ITools {
   }
 
   /**
-   * Verifies if a payment transaction was successful by checking its status and amount on the specified payment rail.
+   * Verifies if a payment transaction was successful by checking its status and amount on the specified chain.
    * @param {string} hash - The transaction hash to verify
    * @param {number} amount - The expected amount that should have been transferred
-   * @param {Currency} currency - The currency that should have been transferred
+   * @param {PaymentMethod} paymentMethod - The payment method used for the transaction
    * @param {string} destinationWalletAddress - The address that should have received the payment
-   * @param {PaymentRail} paymentRail - The payment rail where the transaction was made
    * @returns {Promise<{success: boolean, message: string}>} An object containing:
    *   - success: Whether the verification was successful
    *   - message: A description of the verification result
@@ -217,17 +236,19 @@ export class PaymentsTools implements ITools {
   async verifyPayment(
     hash: string,
     amount: number,
-    currency: Currency,
-    destinationWalletAddress: string,
-    paymentRail: PaymentRail
+    paymentMethod: PaymentMethod,
+    destinationWalletAddress: string
   ): Promise<{ success: boolean; message: string }> {
     try {
       if (!hash) {
         return { success: false, message: 'No transaction hash provided' };
       }
 
-      // Connect to the correct payment rail
-      const rpcUrl = rpcUrls[paymentRail];
+      const chain = paymentMethodToChain[paymentMethod];
+      const currency = paymentMethodToCurrency[paymentMethod];
+
+      // Connect to the appropriate chain
+      const rpcUrl = rpcUrls[chain];
       this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
       const receipt = await this.w3.eth.getTransactionReceipt(hash);
