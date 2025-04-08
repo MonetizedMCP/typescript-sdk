@@ -66,6 +66,11 @@ export class PaymentsTools implements ITools {
 
   /**
    * Sends a payment transaction to a specified destination address.
+   * Gas and gasPrice are dynamically calculated:
+   * - For native token transfers: Uses standard 21000 gas
+   * - For ERC20 token transfers: Estimates gas based on contract interaction
+   * - GasPrice is obtained from the current network conditions
+   * 
    * @param {number} amount - The amount to send
    * @param {string} destinationWalletAddress - The recipient's wallet address
    * @param {string} localWalletAddress - The sender's wallet address
@@ -90,12 +95,15 @@ export class PaymentsTools implements ITools {
       const amountWei = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
 
       const nonce = await this.w3.eth.getTransactionCount(localWalletAddress);
+      const gasPrice = await this.w3.eth.getGasPrice();
 
       if (currencyDetails.isNative) {
-        // For native currency (ETH)
+        // For native token transfers, use standard gas limit
         const tx = {
           from: localWalletAddress,
           to: destinationWalletAddress,
+          gas: '21000', // Standard gas limit for native token transfers
+          gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
           value: amountWei.toString(),
         };
@@ -111,7 +119,6 @@ export class PaymentsTools implements ITools {
           hash: receipt.transactionHash.toString(),
         };
       } else {
-        // For ERC20 tokens
         if (!currencyDetails.address) {
           return { resultMessage: 'Token contract address not found', hash: '' };
         }
@@ -121,16 +128,25 @@ export class PaymentsTools implements ITools {
           .transfer(destinationWalletAddress, amountWei.toString())
           .encodeABI();
 
+        // Estimate gas for ERC20 token transfer
+        const estimatedGas = await this.w3.eth.estimateGas({
+          from: localWalletAddress,
+          to: currencyDetails.address,
+          data: data,
+        });
+
         const tx = {
           from: localWalletAddress,
           to: currencyDetails.address,
+          gas: estimatedGas.toString(),
+          gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
           data: data,
         };
 
         const signedTx = await this.w3.eth.accounts.signTransaction(
           tx,
-          process.env.LOCAL_WALLET_PRIVATE_KEY!
+          this.localWalletPrivateKey
         );
         const receipt = await this.w3.eth.sendSignedTransaction(signedTx.rawTransaction!);
 

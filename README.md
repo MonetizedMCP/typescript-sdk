@@ -1,120 +1,111 @@
-# Monetized MCP
+# TypeScript SDK for Base Sepolia Payments
 
-A TypeScript utility library for handling payments on Base Sepolia testnet. This library provides tools for sending and verifying payments using Web3, supporting both native tokens (like ETH) and ERC20 tokens.
+A TypeScript utility library for handling payments on the Base Sepolia testnet. This library provides tools for sending and verifying payments, supporting both native tokens and ERC20 tokens.
+
+## Features
+
+- Send payments in native tokens (ETH) and ERC20 tokens
+- Automatic gas estimation for transactions
+- Dynamic gas price calculation based on network conditions
+- Verify payment transactions
+- Support for Base Sepolia testnet
 
 ## Installation
 
 ```bash
-npm install monetized-mcp
+npm install @fluora/typescript-sdk
 ```
 
 ## Configuration
 
-Before using the library, you need to set up your environment variables:
+Set up your environment variables:
 
-```env
+```bash
 LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
 ```
 
 ## Usage
 
 ```typescript
-import { PaymentsTools } from 'monetized-mcp';
-import { Currency } from 'monetized-mcp';
+import { PaymentsTools, Currency } from '@fluora/typescript-sdk';
 
-// Initialize the payments tools
 const payments = new PaymentsTools();
 
 // Send a payment
 const result = await payments.sendPayment(
-  1.5, // amount
-  '0xDestinationAddress', // destination wallet address
-  '0xYourWalletAddress', // sender wallet address
-  Currency.ETH // currency to send
+  0.1, // amount
+  '0x...', // destination address
+  '0x...', // sender address
+  Currency.ETH // currency
 );
 
 // Verify a payment
 const verification = await payments.verifyPayment(
-  result.hash, // transaction hash
-  1.5, // expected amount
-  Currency.ETH, // expected currency
-  '0xDestinationAddress' // expected destination address
+  '0x...', // transaction hash
+  0.1, // amount
+  Currency.ETH, // currency
+  '0x...' // destination address
 );
 ```
 
 ## Network
 
-This library operates exclusively on the Base Sepolia testnet (Chain ID: 84532). Base Sepolia is a test environment for the Base network, which is a Layer 2 blockchain built on Ethereum.
+This SDK is configured to work with the Base Sepolia testnet:
+- RPC URL: `https://sepolia.base.org`
+- Chain ID: 84532
+- Native Currency: ETH
+
+## Gas Handling
+
+The SDK automatically handles gas calculations:
+- For native token transfers: Uses standard 21000 gas limit
+- For ERC20 token transfers: Estimates required gas based on contract interaction
+- Gas price is dynamically obtained from the current network conditions
 
 ## Supported Currencies
 
-- ETH (Native token)
-- USDC (ERC20)
-- USDT (ERC20)
-- DAI (ERC20)
-- WETH (ERC20)
+- Native token (ETH)
+- ERC20 tokens (USDC, etc.)
 
 ## API Reference
 
-### `PaymentsTools`
-
-Main class for handling payments on Base Sepolia.
+### `PaymentsTools` Class
 
 #### Constructor
 ```typescript
 constructor()
 ```
-Initializes the Web3 instance and sets up the local wallet using the private key from environment variables.
+Initializes the PaymentsTools instance with Web3 connection to Base Sepolia.
 
-#### Methods
-
-##### `sendPayment(amount: number, destinationWalletAddress: string, localWalletAddress: string, currency: Currency)`
-Sends a payment to the specified destination address on Base Sepolia.
-
-Parameters:
-- `amount`: Amount to send
-- `destinationWalletAddress`: Recipient's wallet address
-- `localWalletAddress`: Sender's wallet address
-- `currency`: Currency to send (ETH, USDC, etc.)
-
-Returns:
+#### `sendPayment`
 ```typescript
-Promise<{
-  resultMessage: string;
-  hash: string;
-}>
+async sendPayment(
+  amount: number,
+  destinationWalletAddress: string,
+  localWalletAddress: string,
+  currency: Currency,
+  chain?: string
+): Promise<{ resultMessage: string; hash: string }>
 ```
+Sends a payment transaction with automatic gas calculation.
 
-##### `verifyPayment(hash: string, amount: number, currency: Currency, destinationWalletAddress: string)`
-Verifies if a payment transaction was successful and matches the expected parameters on Base Sepolia.
-
-Parameters:
-- `hash`: Transaction hash to verify
-- `amount`: Expected amount that should have been transferred
-- `currency`: Expected currency that should have been transferred
-- `destinationWalletAddress`: Expected address that should have received the payment
-
-Returns:
+#### `verifyPayment`
 ```typescript
-Promise<{
-  success: boolean;
-  message: string;
-}>
+async verifyPayment(
+  hash: string,
+  amount: number,
+  currency: Currency,
+  destinationWalletAddress: string
+): Promise<{ success: boolean; message: string }>
 ```
-
-## Error Handling
-
-The library includes comprehensive error handling for transactions. Failed transactions or verifications will return appropriate error messages in the response.
+Verifies if a payment transaction was successful.
 
 ## Future Improvements
 
-This is currently a basic utility library. Future improvements could include:
 - Support for Base Mainnet
-- Support for more token standards
-- Gas optimization
-- Transaction batching
-- Testing suite
-- More detailed documentation
+- Additional token standards
+- Enhanced error handling
+- Gas optimization strategies
 
 ## License
 
