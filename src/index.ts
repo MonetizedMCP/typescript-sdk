@@ -47,7 +47,7 @@ interface ITools {
 const rpcUrls: { [key: string]: string } = {
   'base-sepolia': 'https://sepolia.base.org',
   'base-mainnet': 'https://mainnet.base.org',
-  'solana': '' // TODO: Add Solana RPC URL
+  'solana': 'https://api.devnet.solana.com'
 };
 
 // Mapping of payment methods to their respective chains
@@ -117,17 +117,16 @@ export class PaymentsTools implements ITools {
       // Connect to the appropriate chain
       const rpcUrl = rpcUrls[chain];
       this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+      const localWallet = privateKeyToAccount(
+        Uint8Array.from(Buffer.from(this.localWalletPrivateKey, 'hex'))
+      );
+      this.w3.eth.accounts.wallet.add(localWallet);
 
       const currencyDetails = CURRENCY_DETAILS[currency];
       const amountWei = BigInt(Math.floor(amount * (10 ** currencyDetails.decimals)));
 
-      // Get the current nonce and pending transactions
-      const currentNonce = await this.w3.eth.getTransactionCount(localWalletAddress, 'latest');
-      const pendingNonce = await this.w3.eth.getTransactionCount(localWalletAddress, 'pending');
-      
-      // Use the higher nonce to account for pending transactions
-      const nonce = Math.max(Number(currentNonce), Number(pendingNonce));
-      
+      const nonce = await this.w3.eth.getTransactionCount(localWalletAddress);
+
       const gasPrice = await this.w3.eth.getGasPrice();
 
       if (currencyDetails.isNative) {
@@ -154,15 +153,19 @@ export class PaymentsTools implements ITools {
           };
         } catch (error: any) {
           if (error.message.includes('nonce too low')) {
-            // If nonce is too low, retry with the latest nonce
-            const latestNonce = await this.w3.eth.getTransactionCount(localWalletAddress, 'latest');
-            tx.nonce = latestNonce.toString();
-            const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
-            const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
-            return {
-              resultMessage: `Transaction sent after nonce retry: ${retryReceipt.transactionHash}`,
-              hash: retryReceipt.transactionHash.toString(),
-            };
+            // Extract the next nonce from the error message
+            // Format: "nonce too low: next nonce X, tx nonce Y"
+            const nextNonceMatch = error.message.match(/next nonce (\d+)/);
+            if (nextNonceMatch && nextNonceMatch[1]) {
+              const nextNonce = parseInt(nextNonceMatch[1], 10);
+              tx.nonce = nextNonce.toString();
+              const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
+              const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
+              return {
+                resultMessage: `Transaction sent after nonce retry: ${retryReceipt.transactionHash}`,
+                hash: retryReceipt.transactionHash.toString(),
+              };
+            }
           }
           throw error;
         }
@@ -205,15 +208,19 @@ export class PaymentsTools implements ITools {
           };
         } catch (error: any) {
           if (error.message.includes('nonce too low')) {
-            // If nonce is too low, retry with the latest nonce
-            const latestNonce = await this.w3.eth.getTransactionCount(localWalletAddress, 'latest');
-            tx.nonce = latestNonce.toString();
-            const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
-            const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
-            return {
-              resultMessage: `Token transfer sent after nonce retry: ${retryReceipt.transactionHash}`,
-              hash: retryReceipt.transactionHash.toString(),
-            };
+            // Extract the next nonce from the error message
+            // Format: "nonce too low: next nonce X, tx nonce Y"
+            const nextNonceMatch = error.message.match(/next nonce (\d+)/);
+            if (nextNonceMatch && nextNonceMatch[1]) {
+              const nextNonce = parseInt(nextNonceMatch[1], 10);
+              tx.nonce = nextNonce.toString();
+              const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
+              const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
+              return {
+                resultMessage: `Token transfer sent after nonce retry: ${retryReceipt.transactionHash}`,
+                hash: retryReceipt.transactionHash.toString(),
+              };
+            }
           }
           throw error;
         }
