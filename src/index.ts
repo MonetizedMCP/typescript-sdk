@@ -26,6 +26,28 @@ const ERC20_ABI = [
     ],
     type: 'function',
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        name: 'from',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        name: 'to',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        name: 'value',
+        type: 'uint256',
+      },
+    ],
+    name: 'Transfer',
+    type: 'event',
+  },
 ];
 
 interface ITools {
@@ -47,7 +69,7 @@ interface ITools {
 const rpcUrls: { [key: string]: string } = {
   'base-sepolia': 'https://sepolia.base.org',
   'base-mainnet': 'https://mainnet.base.org',
-  'solana': 'https://api.devnet.solana.com'
+  solana: 'https://api.devnet.solana.com',
 };
 
 // Mapping of payment methods to their respective chains
@@ -60,7 +82,7 @@ const paymentMethodToChain: { [key in PaymentMethod]: string } = {
   [PaymentMethod.USDT_BASE_MAINNET]: 'base-mainnet',
   [PaymentMethod.SOL_SOLANA]: 'solana',
   [PaymentMethod.USDC_SOLANA]: 'solana',
-  [PaymentMethod.USDT_SOLANA]: 'solana'
+  [PaymentMethod.USDT_SOLANA]: 'solana',
 };
 
 // Mapping of payment methods to their respective currencies
@@ -73,7 +95,7 @@ const paymentMethodToCurrency: { [key in PaymentMethod]: Currency } = {
   [PaymentMethod.USDT_BASE_MAINNET]: Currency.USDT,
   [PaymentMethod.SOL_SOLANA]: Currency.SOL,
   [PaymentMethod.USDC_SOLANA]: Currency.USDC,
-  [PaymentMethod.USDT_SOLANA]: Currency.USDT
+  [PaymentMethod.USDT_SOLANA]: Currency.USDT,
 };
 
 export class PaymentsTools implements ITools {
@@ -95,10 +117,9 @@ export class PaymentsTools implements ITools {
    * - For native token transfers: Uses standard 21000 gas
    * - For ERC20 token transfers: Estimates gas based on contract interaction
    * - GasPrice is obtained from the current network conditions
-   * 
+   *
    * @param {number} amount - The amount to send
    * @param {string} destinationWalletAddress - The recipient's wallet address
-   * @param {string} localWalletAddress - The sender's wallet address
    * @param {PaymentMethod} paymentMethod - The payment method to use (e.g., USDC_BASE_SEPOLIA)
    * @returns {Promise<{resultMessage: string, hash: string}>} An object containing:
    *   - resultMessage: A string describing the transaction result or error
@@ -107,13 +128,12 @@ export class PaymentsTools implements ITools {
   async sendPayment(
     amount: number,
     destinationWalletAddress: string,
-    localWalletAddress: string,
     paymentMethod: PaymentMethod
   ): Promise<{ resultMessage: string; hash: string }> {
     try {
       const chain = paymentMethodToChain[paymentMethod];
       const currency = paymentMethodToCurrency[paymentMethod];
-      
+
       // Connect to the appropriate chain
       const rpcUrl = rpcUrls[chain];
       this.w3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
@@ -123,16 +143,16 @@ export class PaymentsTools implements ITools {
       this.w3.eth.accounts.wallet.add(localWallet);
 
       const currencyDetails = CURRENCY_DETAILS[currency];
-      const amountWei = BigInt(Math.floor(amount * (10 ** currencyDetails.decimals)));
+      const amountWei = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
 
-      const nonce = await this.w3.eth.getTransactionCount(localWalletAddress);
+      const nonce = await this.w3.eth.getTransactionCount(localWallet.address);
 
       const gasPrice = await this.w3.eth.getGasPrice();
 
       if (currencyDetails.isNative) {
         // For native token transfers, use standard gas limit
         const tx = {
-          from: localWalletAddress,
+          from: localWallet.address,
           to: destinationWalletAddress,
           gas: '21000', // Standard gas limit for native token transfers
           gasPrice: gasPrice.toString(),
@@ -140,10 +160,7 @@ export class PaymentsTools implements ITools {
           value: amountWei.toString(),
         };
 
-        const signedTx = await this.w3.eth.accounts.signTransaction(
-          tx,
-          this.localWalletPrivateKey
-        );
+        const signedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
 
         try {
           const receipt = await this.w3.eth.sendSignedTransaction(signedTx.rawTransaction!);
@@ -159,8 +176,13 @@ export class PaymentsTools implements ITools {
             if (nextNonceMatch && nextNonceMatch[1]) {
               const nextNonce = parseInt(nextNonceMatch[1], 10);
               tx.nonce = nextNonce.toString();
-              const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
-              const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
+              const retrySignedTx = await this.w3.eth.accounts.signTransaction(
+                tx,
+                this.localWalletPrivateKey
+              );
+              const retryReceipt = await this.w3.eth.sendSignedTransaction(
+                retrySignedTx.rawTransaction!
+              );
               return {
                 resultMessage: `Transaction sent after nonce retry: ${retryReceipt.transactionHash}`,
                 hash: retryReceipt.transactionHash.toString(),
@@ -181,13 +203,13 @@ export class PaymentsTools implements ITools {
 
         // Estimate gas for ERC20 token transfer
         const estimatedGas = await this.w3.eth.estimateGas({
-          from: localWalletAddress,
+          from: localWallet.address,
           to: currencyDetails.address,
           data: data,
         });
 
         const tx = {
-          from: localWalletAddress,
+          from: localWallet.address,
           to: currencyDetails.address,
           gas: estimatedGas.toString(),
           gasPrice: gasPrice.toString(),
@@ -195,10 +217,7 @@ export class PaymentsTools implements ITools {
           data: data,
         };
 
-        const signedTx = await this.w3.eth.accounts.signTransaction(
-          tx,
-          this.localWalletPrivateKey
-        );
+        const signedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
 
         try {
           const receipt = await this.w3.eth.sendSignedTransaction(signedTx.rawTransaction!);
@@ -214,8 +233,13 @@ export class PaymentsTools implements ITools {
             if (nextNonceMatch && nextNonceMatch[1]) {
               const nextNonce = parseInt(nextNonceMatch[1], 10);
               tx.nonce = nextNonce.toString();
-              const retrySignedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
-              const retryReceipt = await this.w3.eth.sendSignedTransaction(retrySignedTx.rawTransaction!);
+              const retrySignedTx = await this.w3.eth.accounts.signTransaction(
+                tx,
+                this.localWalletPrivateKey
+              );
+              const retryReceipt = await this.w3.eth.sendSignedTransaction(
+                retrySignedTx.rawTransaction!
+              );
               return {
                 resultMessage: `Token transfer sent after nonce retry: ${retryReceipt.transactionHash}`,
                 hash: retryReceipt.transactionHash.toString(),
@@ -268,40 +292,58 @@ export class PaymentsTools implements ITools {
       }
 
       const currencyDetails = CURRENCY_DETAILS[currency];
-      const expectedAmount = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
+      const expectedAmount = BigInt(Math.floor(amount * (10 ** currencyDetails.decimals)));
+
+      const transaction = await this.w3.eth.getTransaction(hash);
+      
+      if (!transaction) {
+        return { success: false, message: 'Transaction not found' };
+      }
 
       if (currencyDetails.isNative) {
-        const transaction = await this.w3.eth.getTransaction(hash);
+        // For native token transfers, verify the recipient and amount directly
         if (transaction.to?.toLowerCase() !== destinationWalletAddress.toLowerCase()) {
-          return { success: false, message: 'Incorrect destination address' };
+          return { 
+            success: false, 
+            message: `Incorrect destination address. Expected: ${destinationWalletAddress.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
+          };
         }
 
         if (BigInt(transaction.value) !== expectedAmount) {
-          return { success: false, message: 'Incorrect amount transferred' };
+          return { 
+            success: false, 
+            message: `Incorrect amount transferred. Expected: ${expectedAmount}, Got: ${transaction.value}` 
+          };
         }
-
-        return { success: true, message: 'Payment verified successfully' };
       } else {
+        // For token transfers, verify the token contract and decode the transfer data
         if (!currencyDetails.address) {
           return { success: false, message: 'Token contract address not found' };
         }
 
-        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, currencyDetails.address);
-        const transferEvents = await tokenContract.getPastEvents('allEvents', {
-          fromBlock: receipt.blockNumber,
-          toBlock: receipt.blockNumber,
-          filter: {
-            _to: destinationWalletAddress,
-            _value: expectedAmount.toString(),
-          },
-        });
-
-        if (transferEvents.length === 0) {
-          return { success: false, message: 'Token transfer event not found' };
+        if (transaction.to?.toLowerCase() !== currencyDetails.address.toLowerCase()) {
+          return { 
+            success: false, 
+            message: `Transaction not sent to token contract. Expected: ${currencyDetails.address.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
+          };
         }
 
-        return { success: true, message: 'Token transfer verified successfully' };
+        // Decode the transaction input data to verify the token transfer details
+        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, currencyDetails.address);
+        const decodedInput = tokenContract.methods.transfer(destinationWalletAddress, expectedAmount.toString()).encodeABI();
+        
+        if (transaction.input.toLowerCase() !== decodedInput.toLowerCase()) {
+          return { 
+            success: false, 
+            message: 'Token transfer data does not match expected values' 
+          };
+        }
       }
+
+      return {
+        success: true,
+        message: 'Payment verified successfully'
+      };
     } catch (error: any) {
       return { success: false, message: 'Error verifying payment: ' + error.message };
     }
