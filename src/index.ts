@@ -1,6 +1,6 @@
 import { Web3 } from 'web3';
 import { privateKeyToAccount } from 'web3-eth-accounts';
-import { Currency, CURRENCY_DETAILS } from './currency';
+import { Currency, CURRENCY_DETAILS, PAYMENT_METHOD_ADDRESSES } from './currency';
 import { PaymentMethod } from './payment-method';
 
 // ERC20 ABI for token transfers
@@ -192,11 +192,12 @@ export class PaymentsTools implements ITools {
           throw error;
         }
       } else {
-        if (!currencyDetails.address) {
-          return { resultMessage: 'Token contract address not found', hash: '' };
+        const contractAddress = PAYMENT_METHOD_ADDRESSES[paymentMethod];
+        if (!contractAddress) {
+          return { resultMessage: 'Token contract address not found for this payment method', hash: '' };
         }
 
-        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, currencyDetails.address);
+        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, contractAddress);
         const data = tokenContract.methods
           .transfer(destinationWalletAddress, amountWei.toString())
           .encodeABI();
@@ -204,13 +205,13 @@ export class PaymentsTools implements ITools {
         // Estimate gas for ERC20 token transfer
         const estimatedGas = await this.w3.eth.estimateGas({
           from: localWallet.address,
-          to: currencyDetails.address,
+          to: contractAddress,
           data: data,
         });
 
         const tx = {
           from: localWallet.address,
-          to: currencyDetails.address,
+          to: contractAddress,
           gas: estimatedGas.toString(),
           gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
@@ -318,20 +319,20 @@ export class PaymentsTools implements ITools {
           };
         }
       } else {
-        // For token transfers, verify the token contract and decode the transfer data
-        if (!currencyDetails.address) {
-          return { success: false, message: 'Token contract address not found' };
+        const contractAddress = PAYMENT_METHOD_ADDRESSES[paymentMethod];
+        if (!contractAddress) {
+          return { success: false, message: 'Token contract address not found for this payment method' };
         }
 
-        if (transaction.to?.toLowerCase() !== currencyDetails.address.toLowerCase()) {
+        if (transaction.to?.toLowerCase() !== contractAddress.toLowerCase()) {
           return { 
             success: false, 
-            message: `Transaction not sent to token contract. Expected: ${currencyDetails.address.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
+            message: `Transaction not sent to token contract. Expected: ${contractAddress.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
           };
         }
 
         // Decode the transaction input data to verify the token transfer details
-        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, currencyDetails.address);
+        const tokenContract = new this.w3.eth.Contract(ERC20_ABI, contractAddress);
         const decodedInput = tokenContract.methods.transfer(destinationWalletAddress, expectedAmount.toString()).encodeABI();
         
         if (transaction.input.toLowerCase() !== decodedInput.toLowerCase()) {
