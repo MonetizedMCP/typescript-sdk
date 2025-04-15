@@ -143,7 +143,7 @@ export class PaymentsTools implements ITools {
       this.w3.eth.accounts.wallet.add(localWallet);
 
       const currencyDetails = CURRENCY_DETAILS[currency];
-      const amountWei = BigInt(Math.floor(amount * 10 ** currencyDetails.decimals));
+      const amountWei = BigInt(Math.floor(amount * (10 ** currencyDetails.decimals)));
 
       const nonce = await this.w3.eth.getTransactionCount(localWallet.address);
 
@@ -260,16 +260,18 @@ export class PaymentsTools implements ITools {
    * @param {number} amount - The expected amount that should have been transferred
    * @param {PaymentMethod} paymentMethod - The payment method used for the transaction
    * @param {string} destinationWalletAddress - The address that should have received the payment
-   * @returns {Promise<{success: boolean, message: string}>} An object containing:
+   * @returns {Promise<{success: boolean, message: string, blockChainExplorerUrl?: string, blockChainName?: string}>} An object containing:
    *   - success: Whether the verification was successful
    *   - message: A description of the verification result
+   *   - blockChainExplorerUrl: The URL to the block explorer for the transaction
+   *   - blockChainName: The name of the blockchain
    */
   async verifyPayment(
     hash: string,
     amount: number,
     paymentMethod: PaymentMethod,
     destinationWalletAddress: string
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ success: boolean; message: string, blockChainExplorerUrl?: string, blockChainName?: string }> {
     try {
       if (!hash) {
         return { success: false, message: 'No transaction hash provided' };
@@ -342,7 +344,9 @@ export class PaymentsTools implements ITools {
 
       return {
         success: true,
-        message: 'Payment verified successfully'
+        message: 'Payment verified successfully',
+        blockChainExplorerUrl: `https://${chain}.blockscout.com/tx/${hash}`,
+        blockChainName: chain,
       };
     } catch (error: any) {
       return { success: false, message: 'Error verifying payment: ' + error.message };
