@@ -2,7 +2,7 @@
  * Enum representing different payment methods available in the system
  * Format: CURRENCY_CHAIN
  */
-export enum PaymentMethod {
+export enum PaymentMethods {
   // Base Sepolia
   ETH_BASE_SEPOLIA = 'ETH_BASE_SEPOLIA',
   USDC_BASE_SEPOLIA = 'USDC_BASE_SEPOLIA',
