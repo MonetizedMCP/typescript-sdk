@@ -1,7 +1,8 @@
-import { Web3 } from 'web3';
+import web3, { Web3 } from 'web3';
 import { privateKeyToAccount } from 'web3-eth-accounts';
 import { Currency, CURRENCY_DETAILS, PAYMENT_METHOD_ADDRESSES } from './currency';
-import { PaymentMethod } from './payment-method';
+import { PaymentMethods } from './payment-method';
+import { PricingListingItem } from '../main';
 
 // ERC20 ABI for token transfers
 const ERC20_ABI = [
@@ -55,12 +56,14 @@ interface ITools {
     amount: number,
     destinationWalletAddress: string,
     localWalletAddress: string,
-    paymentMethod: PaymentMethod
+    paymentMethod: PaymentMethods,
+    orderId: string,
+    orderDate: Date
   ): Promise<{ resultMessage: string; hash: string }>;
   verifyPayment(
     hash: string,
     amount: number,
-    paymentMethod: PaymentMethod,
+    paymentMethod: PaymentMethods,
     destinationWalletAddress: string
   ): Promise<{ success: boolean; message: string }>;
 }
@@ -73,29 +76,29 @@ const rpcUrls: { [key: string]: string } = {
 };
 
 // Mapping of payment methods to their respective chains
-const paymentMethodToChain: { [key in PaymentMethod]: string } = {
-  [PaymentMethod.ETH_BASE_SEPOLIA]: 'base-sepolia',
-  [PaymentMethod.USDC_BASE_SEPOLIA]: 'base-sepolia',
-  [PaymentMethod.USDT_BASE_SEPOLIA]: 'base-sepolia',
-  [PaymentMethod.ETH_BASE_MAINNET]: 'base-mainnet',
-  [PaymentMethod.USDC_BASE_MAINNET]: 'base-mainnet',
-  [PaymentMethod.USDT_BASE_MAINNET]: 'base-mainnet',
-  [PaymentMethod.SOL_SOLANA]: 'solana',
-  [PaymentMethod.USDC_SOLANA]: 'solana',
-  [PaymentMethod.USDT_SOLANA]: 'solana',
+const paymentMethodToChain: { [key in PaymentMethods]: string } = {
+  [PaymentMethods.ETH_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethods.USDC_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethods.USDT_BASE_SEPOLIA]: 'base-sepolia',
+  [PaymentMethods.ETH_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethods.USDC_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethods.USDT_BASE_MAINNET]: 'base-mainnet',
+  [PaymentMethods.SOL_SOLANA]: 'solana',
+  [PaymentMethods.USDC_SOLANA]: 'solana',
+  [PaymentMethods.USDT_SOLANA]: 'solana',
 };
 
 // Mapping of payment methods to their respective currencies
-const paymentMethodToCurrency: { [key in PaymentMethod]: Currency } = {
-  [PaymentMethod.ETH_BASE_SEPOLIA]: Currency.ETH,
-  [PaymentMethod.USDC_BASE_SEPOLIA]: Currency.USDC,
-  [PaymentMethod.USDT_BASE_SEPOLIA]: Currency.USDT,
-  [PaymentMethod.ETH_BASE_MAINNET]: Currency.ETH,
-  [PaymentMethod.USDC_BASE_MAINNET]: Currency.USDC,
-  [PaymentMethod.USDT_BASE_MAINNET]: Currency.USDT,
-  [PaymentMethod.SOL_SOLANA]: Currency.SOL,
-  [PaymentMethod.USDC_SOLANA]: Currency.USDC,
-  [PaymentMethod.USDT_SOLANA]: Currency.USDT,
+const paymentMethodToCurrency: { [key in PaymentMethods]: Currency } = {
+  [PaymentMethods.ETH_BASE_SEPOLIA]: Currency.ETH,
+  [PaymentMethods.USDC_BASE_SEPOLIA]: Currency.USDC,
+  [PaymentMethods.USDT_BASE_SEPOLIA]: Currency.USDT,
+  [PaymentMethods.ETH_BASE_MAINNET]: Currency.ETH,
+  [PaymentMethods.USDC_BASE_MAINNET]: Currency.USDC,
+  [PaymentMethods.USDT_BASE_MAINNET]: Currency.USDT,
+  [PaymentMethods.SOL_SOLANA]: Currency.SOL,
+  [PaymentMethods.USDC_SOLANA]: Currency.USDC,
+  [PaymentMethods.USDT_SOLANA]: Currency.USDT,
 };
 
 export class PaymentsTools implements ITools {
@@ -120,15 +123,18 @@ export class PaymentsTools implements ITools {
    *
    * @param {number} amount - The amount to send
    * @param {string} destinationWalletAddress - The recipient's wallet address
-   * @param {PaymentMethod} paymentMethod - The payment method to use (e.g., USDC_BASE_SEPOLIA)
+   * @param {PaymentMethods} paymentMethod - The payment method to use (e.g., USDC_BASE_SEPOLIA)
    * @returns {Promise<{resultMessage: string, hash: string}>} An object containing:
    *   - resultMessage: A string describing the transaction result or error
    *   - hash: The transaction hash if successful, empty string if failed
    */
   async sendPayment(
     amount: number,
-    destinationWalletAddress: string,
-    paymentMethod: PaymentMethod
+    sellerWalletAddress: string,
+    buyerWalletAddress: string,
+    paymentMethod: PaymentMethods,
+    orderId: string,
+    orderDate: Date
   ): Promise<{ resultMessage: string; hash: string }> {
     try {
       const chain = paymentMethodToChain[paymentMethod];
@@ -149,15 +155,19 @@ export class PaymentsTools implements ITools {
 
       const gasPrice = await this.w3.eth.getGasPrice();
 
+      const metadata = { orderId, orderDate, buyerWalletAddress, sellerWalletAddress, amount, currency };
+
+
       if (currencyDetails.isNative) {
         // For native token transfers, use standard gas limit
         const tx = {
           from: localWallet.address,
-          to: destinationWalletAddress,
+          to: sellerWalletAddress,
           gas: '21000', // Standard gas limit for native token transfers
           gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
           value: amountWei.toString(),
+          data: this.w3.utils.utf8ToHex(JSON.stringify(metadata)),
         };
 
         const signedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
@@ -199,7 +209,7 @@ export class PaymentsTools implements ITools {
 
         const tokenContract = new this.w3.eth.Contract(ERC20_ABI, contractAddress);
         const data = tokenContract.methods
-          .transfer(destinationWalletAddress, amountWei.toString())
+          .transfer(sellerWalletAddress, amountWei.toString())
           .encodeABI();
 
         // Estimate gas for ERC20 token transfer
@@ -215,7 +225,7 @@ export class PaymentsTools implements ITools {
           gas: estimatedGas.toString(),
           gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
-          data: data,
+          data: data
         };
 
         const signedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
@@ -259,7 +269,7 @@ export class PaymentsTools implements ITools {
    * Verifies if a payment transaction was successful by checking its status and amount on the specified chain.
    * @param {string} hash - The transaction hash to verify
    * @param {number} amount - The expected amount that should have been transferred
-   * @param {PaymentMethod} paymentMethod - The payment method used for the transaction
+   * @param {PaymentMethods} paymentMethod - The payment method used for the transaction
    * @param {string} destinationWalletAddress - The address that should have received the payment
    * @returns {Promise<{success: boolean, message: string, blockChainExplorerUrl?: string, blockChainName?: string}>} An object containing:
    *   - success: Whether the verification was successful
@@ -270,10 +280,19 @@ export class PaymentsTools implements ITools {
   async verifyPayment(
     hash: string,
     amount: number,
-    paymentMethod: PaymentMethod,
-    destinationWalletAddress: string
+    paymentMethod: PaymentMethods,
+    buyerWalletAddress: string
   ): Promise<{ success: boolean; message: string, blockChainExplorerUrl?: string, blockChainName?: string }> {
     try {
+
+      // Validate the hash
+      // Check if the hash is a valid transaction hash using the right currency
+      // Check if the transaction is on the right chain
+      // If the transaction is from the buyer to the seller
+      // Check if the transaction is on the right network
+      // Check if the amount is correct
+
+
       if (!hash) {
         return { success: false, message: 'No transaction hash provided' };
       }
@@ -305,10 +324,10 @@ export class PaymentsTools implements ITools {
 
       if (currencyDetails.isNative) {
         // For native token transfers, verify the recipient and amount directly
-        if (transaction.to?.toLowerCase() !== destinationWalletAddress.toLowerCase()) {
+        if (transaction.to?.toLowerCase() !== buyerWalletAddress.toLowerCase()) {
           return { 
             success: false, 
-            message: `Incorrect destination address. Expected: ${destinationWalletAddress.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
+            message: `Incorrect destination address. Expected: ${buyerWalletAddress.toLowerCase()}, Got: ${transaction.to?.toLowerCase()}` 
           };
         }
 
@@ -333,7 +352,7 @@ export class PaymentsTools implements ITools {
 
         // Decode the transaction input data to verify the token transfer details
         const tokenContract = new this.w3.eth.Contract(ERC20_ABI, contractAddress);
-        const decodedInput = tokenContract.methods.transfer(destinationWalletAddress, expectedAmount.toString()).encodeABI();
+        const decodedInput = tokenContract.methods.transfer(buyerWalletAddress, expectedAmount.toString()).encodeABI();
         
         if (transaction.input.toLowerCase() !== decodedInput.toLowerCase()) {
           return { 
