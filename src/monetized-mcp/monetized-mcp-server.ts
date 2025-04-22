@@ -1,13 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import express, { Request, Response } from 'express';
 import { z } from "zod";
-import { Currency } from "../payments/currency";
+import { PaymentMethods } from "../payments/payment-method";
 
 export type PricingListingItem = {
     name: string;
     description: string;
     price: number;
     currency: string;
+    params: Record<string, any>;
 }
 
 export type PricingListingResponse = {
@@ -16,16 +18,26 @@ export type PricingListingResponse = {
 
 export type PaymentMethodResponse = {
     name: string;
-    chain: string;
     description: string;
     sellerAccountId: string;
-    currency: Currency;
+    paymentMethod: PaymentMethods;
+}
+
+export type PlaceOrderRequest = {
+    items: PricingListingItem[];
+}
+
+export type PlaceOrderResponse = {
+    items: PricingListingItem[];
+    orderId: string;
+    totalPrice: number;
 }
 
 export type PurchaseResponse = {
     items: PricingListingItem[];
     purchaseRequest: PurchaseRequest;
     orderId: string;
+    toolResult: string;
 }
 
 export type PurchaseRequest = {
@@ -33,8 +45,10 @@ export type PurchaseRequest = {
     totalPrice: number;
     buyerAccountId: string;
     transactionHash: string;
-    currency: Currency;
+    paymentMethod: PaymentMethods;
 }
+
+const app = express();
 
 export abstract class MonetizedMCPServer {
     protected server: McpServer;
@@ -79,11 +93,47 @@ export abstract class MonetizedMCPServer {
                 }
             }
         );
-        this.server.tool("make-purchase",
-            { filePath: z.string() },
-            async ({ filePath }) => {
+        this.server.tool("place-order",
+            {
+                items: z.array(z.object({
+                    name: z.string(),
+                    description: z.string(),
+                    price: z.number(),
+                    currency: z.string(),
+                    params: z.record(z.any())
+                })),
+            },
+            async ({ items }) => {
                 try {
-                    const purchase = await this.makePurchase();
+                    const purchase = await this.placeOrder({ items });
+                    return { content: [{ type: "text", text: JSON.stringify(purchase) }] };
+                } catch (error: any) {
+                    return {
+                        content: [{
+                            type: "text",
+                            text: `Error placing order: ${error.message}`
+                        }]
+                    };
+                }
+            }
+        );
+        this.server.tool("make-purchase",
+            {
+                items: z.array(z.object({
+                    name: z.string(),
+                    description: z.string(),
+                    price: z.number(),
+                    currency: z.string(),
+                    params: z.record(z.any())
+                })),
+                totalPrice: z.number(),
+                buyerAccountId: z.string(),
+                transactionHash: z.string(),
+                paymentMethod: z.nativeEnum(PaymentMethods)
+            },
+            async ({ items, totalPrice, buyerAccountId, transactionHash, paymentMethod }) => {
+                try {
+                    const purchase = await this.makePurchase({ items, totalPrice, buyerAccountId, transactionHash, paymentMethod });
                     return { content: [{ type: "text", text: JSON.stringify(purchase) }] };
                 } catch (error: any) {
                     return {
@@ -99,10 +149,33 @@ export abstract class MonetizedMCPServer {
 
     abstract pricingListing(): Promise<PricingListingResponse>;
     abstract paymentMethod(): Promise<PaymentMethodResponse[]>;
-    abstract makePurchase(): Promise<PurchaseResponse>;
+    abstract placeOrder(placeOrderRequest: PlaceOrderRequest): Promise<PlaceOrderResponse>;
+    abstract makePurchase(purchaseRequest: PurchaseRequest): Promise<PurchaseResponse>;
     
     public async runMonetizeMCPServer() {
-        const transport = new StdioServerTransport();
-        await this.server.connect(transport);
+        const transports: { [sessionId: string]: SSEServerTransport } = {};
+
+        app.get('/sse', async (_: Request, res: Response) => {
+            const transport = new SSEServerTransport('/messages', res);
+            transports[transport.sessionId] = transport;
+            res.on('close', () => {
+                delete transports[transport.sessionId];
+            });
+            await this.server.connect(transport);
+        });
+
+        app.post('/messages', async (req: Request, res: Response) => {
+            const sessionId = req.query.sessionId as string;
+            const transport = transports[sessionId];
+            if (transport) {
+                await transport.handlePostMessage(req, res);
+            } else {
+                res.status(400).send('No transport found for sessionId');
+            }
+        });
+
+        app.listen(3020, () => {
+            console.error('MCP Server listening on port 3020');
+        });
     }
 }

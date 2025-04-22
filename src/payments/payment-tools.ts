@@ -1,8 +1,7 @@
-import web3, { Web3 } from 'web3';
-import { privateKeyToAccount } from 'web3-eth-accounts';
+import { Web3 } from 'web3';
+import { privateKeyToAccount, Transaction } from 'web3-eth-accounts';
 import { Currency, CURRENCY_DETAILS, PAYMENT_METHOD_ADDRESSES } from './currency';
 import { PaymentMethods } from './payment-method';
-import { PricingListingItem } from '../main';
 
 // ERC20 ABI for token transfers
 const ERC20_ABI = [
@@ -114,6 +113,14 @@ export class PaymentsTools implements ITools {
     this.w3.eth.accounts.wallet.add(localWallet);
   }
 
+  // async signTransaction(transaction: Transaction, metadata: any): Promise<string> {
+
+  //   transaction.data = this.w3.utils.utf8ToHex(JSON.stringify(metadata));
+
+  //   const signedTx = await this.w3.eth.accounts.signTransaction(transaction, this.localWalletPrivateKey);
+  //   return signedTx.rawTransaction!;
+  // }
+  
   /**
    * Sends a payment transaction to a specified destination address.
    * Gas and gasPrice are dynamically calculated:
@@ -208,9 +215,16 @@ export class PaymentsTools implements ITools {
         }
 
         const tokenContract = new this.w3.eth.Contract(ERC20_ABI, contractAddress);
+
+        
+        const transferMethod = tokenContract.methods.transfer(sellerWalletAddress, amountWei.toString());
+
         const data = tokenContract.methods
           .transfer(sellerWalletAddress, amountWei.toString())
           .encodeABI();
+        
+        
+        console.log('Encoded ABI data for token transfer:', data);
 
         // Estimate gas for ERC20 token transfer
         const estimatedGas = await this.w3.eth.estimateGas({
@@ -225,7 +239,8 @@ export class PaymentsTools implements ITools {
           gas: estimatedGas.toString(),
           gasPrice: gasPrice.toString(),
           nonce: nonce.toString(),
-          data: data
+          data: data,
+          metadata: metadata,
         };
 
         const signedTx = await this.w3.eth.accounts.signTransaction(tx, this.localWalletPrivateKey);
