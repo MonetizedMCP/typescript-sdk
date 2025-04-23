@@ -6,19 +6,25 @@
     "dist"
   ],
   "scripts": {
+    "facilitator": "tsx --env-file=.env src/external/x402/facilitator.ts",
     "build": "npx tsc --outDir dist"
   },
+  "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
+    "axios": "^1.8.4",
     "express": "^4.19.2",
+    "hono": "^4.7.2",
     "jest": "^29.7.0",
+    "viem": "^2.23.5",
     "web3": "^4.5.0",
     "web3-eth-accounts": "^4.3.1",
+    "x402": "^0.1.2",
     "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@types/node": "^20.17.30",
     "@types/express": "^4.17.21",
+    "@types/node": "^20.17.30",
     "typescript": "^5.8.3"
   },
   "description": "A TypeScript utility library for handling payments.",
