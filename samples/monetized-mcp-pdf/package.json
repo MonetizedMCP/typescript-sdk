@@ -1,17 +1,20 @@
 {
   "name": "monetized-mcp",
   "version": "0.1.40",
+  "main": "dist/main.js",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc --outDir dist"
+    "build": "npx tsc --outDir dist",
+    "start": "node dist/samples/monetized-mcp-pdf/src/index.js --env-file=.env"
   },
   "type": "module",
   "dependencies": {
     "axios": "^1.8.4",
-    "monetized-mcp": "0.1.45",
-    "@aws-sdk/client-s3": "^3.0.0"
+    "monetized-mcp": "0.1.47",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
