@@ -152,14 +152,14 @@ export abstract class MonetizedMCPServer {
         paymentMethod,
       }) => {
         try {
-          const paymentTools = new PaymentsTools();
-          const result = await paymentTools.sendPayment(
-            totalPrice,
-            buyerAccountId,
-            paymentMethod,
-            signedTransaction
-          );
-          if (result.hash) {
+          // const paymentTools = new PaymentsTools();
+          // const result = await paymentTools.sendPayment(
+          //   totalPrice,
+          //   buyerAccountId,
+          //   paymentMethod,
+          //   signedTransaction
+          // );
+          if (true) {
             const purchase = await this.makePurchase({
               items,
               totalPrice,
@@ -171,7 +171,7 @@ export abstract class MonetizedMCPServer {
               content: [{ type: "text", text: JSON.stringify(purchase) }],
             };
           } else {
-            throw new Error(result.resultMessage);
+            throw new Error("Error making purchase");
           }
         } catch (error: any) {
           return {
