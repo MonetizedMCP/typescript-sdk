@@ -6,11 +6,11 @@ import { PaymentMethods } from "../payments/payment-method.js";
 import { PaymentsTools } from "../payments/payment-tools.js";
 
 export type PricingListingItem = {
-  name: string;
-  description: string;
-  price: number;
-  currency: string;
-  params: Record<string, any>;
+  name?: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  params?: Record<string, any>;
 };
 
 export type PricingListingResponse = {
@@ -101,11 +101,11 @@ export abstract class MonetizedMCPServer {
       {
         items: z.array(
           z.object({
-            name: z.string(),
-            description: z.string(),
-            price: z.number(),
-            currency: z.string(),
-            params: z.record(z.any()),
+            name: z.string().min(1),
+            description: z.string().min(1),
+            price: z.number().min(0),
+            currency: z.string().min(1),
+            params: z.record(z.string(), z.any()),
           })
         ),
       },
@@ -132,11 +132,11 @@ export abstract class MonetizedMCPServer {
       {
         items: z.array(
           z.object({
-            name: z.string(),
-            description: z.string(),
-            price: z.number(),
-            currency: z.string(),
-            params: z.record(z.any()),
+            name: z.string().trim().min(1),
+            description: z.string().trim().min(1),
+            price: z.number().min(0),
+            currency: z.string().trim().min(1),
+            params: z.record(z.string(), z.any()),
           })
         ),
         totalPrice: z.number(),

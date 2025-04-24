@@ -1,13 +1,12 @@
 import {
   MonetizedMCPServer,
   PaymentMethodResponse,
-  // PaymentMethods,
   PlaceOrderRequest,
   PlaceOrderResponse,
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
-} from "../../monetized-mcp/monetized-mcp-server.js";
+} from "../../../src/main.js";
 
 const axios = require("axios");
 
@@ -54,7 +53,7 @@ export class MCPServer extends MonetizedMCPServer {
             url: "https://api.pdfshift.io/v3/convert/pdf",
             responseType: "arraybuffer",
             data: {
-              source: item.params.websiteUrl,
+              source: item.params!.websiteUrl,
             },
             auth: { username: "api", password: process.env.PDFSHIFT_API_KEY },
           })

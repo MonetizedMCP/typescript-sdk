@@ -1,8 +1,7 @@
 {
   "name": "monetized-mcp",
-  "version": "0.1.45",
+  "version": "0.1.41",
   "main": "dist/main.js",
-  "types": "dist/main.d.ts",
   "bin": {
     "monetized-mcp": "dist/main.js"
   },
@@ -11,7 +10,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npx tsc src/main.ts --outDir dist --declaration --declarationMap"
+    "build": "npx esbuild ./src/main.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=build/index.js --packages=external --format=esm"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
@@ -40,6 +39,7 @@
   ],
   "author": "GuilhermeSantosPlank",
   "license": "ISC",
+  "types": "./dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/MonetizedMCP/typescript-sdk/issues"
   },

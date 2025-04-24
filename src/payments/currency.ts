@@ -1,4 +1,4 @@
-import { PaymentMethods } from "./payment-method";
+import { PaymentMethods } from "./payment-method.js";
 
 /**
  * Enum representing different currencies supported by the system
