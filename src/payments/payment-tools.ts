@@ -295,7 +295,7 @@ export class PaymentsTools implements ITools {
         return { success: false, message: "Transaction not found" };
       }
 
-      if (receipt.status !== 1n) {
+      if (receipt.status !== BigInt(1)) {
         return { success: false, message: "Transaction failed" };
       }
 

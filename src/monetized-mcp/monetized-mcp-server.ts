@@ -3,7 +3,6 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express, { Request, Response } from "express";
 import { z } from "zod";
 import { PaymentMethods } from "../payments/payment-method.js";
-import { PaymentsTools } from "../payments/payment-tools.js";
 
 export type PricingListingItem = {
   name?: string;

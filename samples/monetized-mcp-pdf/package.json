@@ -1,12 +1,11 @@
 {
   "name": "monetized-mcp",
   "version": "0.1.40",
-  "main": "dist/main.js",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "npx tsc --outDir dist"
+    "build": "tsc --outDir dist"
   },
   "type": "module",
   "dependencies": {
