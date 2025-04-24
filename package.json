@@ -1,8 +1,14 @@
 {
   "name": "monetized-mcp",
-  "version": "0.1.45",
+  "version": "0.1.47",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "types": "./dist/main.d.ts"
+    }
+  },
   "bin": {
     "monetized-mcp": "dist/main.js"
   },
@@ -11,7 +17,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npx tsc src/main.ts --outDir dist --declaration --declarationMap"
+    "build": "npx tsc"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",

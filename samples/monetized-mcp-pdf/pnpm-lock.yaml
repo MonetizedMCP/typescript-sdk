@@ -11,9 +11,12 @@ dependencies:
   axios:
     specifier: ^1.8.4
     version: 1.8.4
+  dotenv:
+    specifier: ^16.4.5
+    version: 16.5.0
   monetized-mcp:
-    specifier: 0.1.45
-    version: 0.1.45(@types/node@20.17.30)(typescript@5.8.3)
+    specifier: 0.1.47
+    version: 0.1.47(@types/node@20.17.30)(typescript@5.8.3)
 
 devDependencies:
   '@types/express':
@@ -2466,6 +2469,11 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dev: false
 
+  /dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
+    engines: {node: '>=12'}
+    dev: false
+
   /dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -3702,8 +3710,8 @@ packages:
       brace-expansion: 1.1.11
     dev: false
 
-  /monetized-mcp@0.1.45(@types/node@20.17.30)(typescript@5.8.3):
-    resolution: {integrity: sha512-PEf8PjRDXrZx5WLJELT4oj+jujpPfeNRFzcW2PwvqxwH3hBp7Gbteks6iL19h/YQJp/oxEtCbjuAbk4tYJ059Q==}
+  /monetized-mcp@0.1.47(@types/node@20.17.30)(typescript@5.8.3):
+    resolution: {integrity: sha512-cOONwHbsWqaFBJuNG2cPptNLQSuJ8o6YDY3SCcC3Aac4oKg0Oi2amWe+EQGDBQCMGObgz1m4i2x3Xi8HPP/TUw==}
     hasBin: true
     dependencies:
       '@modelcontextprotocol/sdk': 1.10.2
