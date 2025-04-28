@@ -24,12 +24,13 @@ describe("PaymentTools X402 Integration Tests", () => {
 
     // Step 2: Verify the payment
     const verificationResult = await paymentTools.verifyPayment(
-      "10" as Money,
+      "0.01" as Money,
       sellerAddress,
       {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
+        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 
@@ -41,7 +42,7 @@ describe("PaymentTools X402 Integration Tests", () => {
 
   it("should fail verification with invalid amount", async () => {
     const paymentHeader = await paymentTools.signTransaction(
-      10,
+      0.01,
       sellerAddress,
       buyerWalletPrivateKey,
       resource
@@ -54,6 +55,7 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
+        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 
@@ -63,12 +65,13 @@ describe("PaymentTools X402 Integration Tests", () => {
 
   it("should fail verification with invalid payment header", async () => {
     const verificationResult = await paymentTools.verifyPayment(
-      "10" as Money,
+      "0.01" as Money,
       sellerAddress,
       {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader: "invalid-header",
         resource,
+        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 

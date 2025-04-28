@@ -18,7 +18,7 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "test": "vitest",
+    "test": "vitest --testTimeout=30000",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
