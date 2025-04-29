@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { PaymentsTools } from "../payments/payment-tools-x402.js";
 import { Address } from "viem";
-import { Money } from "x402";
+import { Money } from "x402/types";
 
 describe("PaymentTools X402 Integration Tests", () => {
   const paymentTools = new PaymentsTools();
   const sellerAddress = "0x069B0687C879b8E9633fb9BFeC3fea684bc238D5" as Address;
-  const buyerWalletPrivateKey = "2028cecae352cc027eaf3dc907bac861da6901fc504e4017ced96ca46122e7f1" as Address;
+  const buyerWalletPrivateKey =
+    "2028cecae352cc027eaf3dc907bac861da6901fc504e4017ced96ca46122e7f1" as Address;
   const resource = "https://example.com/resource" as const;
 
   it("should sign a transaction and verify payment successfully", async () => {
@@ -30,7 +31,6 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
-        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 
@@ -55,7 +55,6 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
-        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 
@@ -69,13 +68,14 @@ describe("PaymentTools X402 Integration Tests", () => {
       sellerAddress,
       {
         facilitatorUrl: "https://x402.org/facilitator",
-        paymentHeader: "invalid-header",
+        paymentHeader: Buffer.from("{}").toString("base64"),
         resource,
-        buyerWalletAddress: buyerWalletPrivateKey
       }
     );
 
     expect(verificationResult.success).toBe(false);
-    expect(verificationResult.message).toContain("Error during payment verification");
+    expect(verificationResult.message).toContain(
+      "Error during payment verification"
+    );
   });
-}); 
+});

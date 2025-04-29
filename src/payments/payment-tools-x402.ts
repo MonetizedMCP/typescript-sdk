@@ -1,17 +1,16 @@
 import { Address, createWalletClient, Hex, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import { createPaymentHeader } from "x402/client";
+import { exact } from "x402/schemes";
+import { processPriceToAtomicAmount } from "x402/shared";
 import {
-  createPaymentHeader,
   Money,
   moneySchema,
-  PaymentDetails,
+  PaymentRequirements,
   settleResponseHeader,
-  SignerWallet,
-  useFacilitator,
-} from "x402";
-import { verify, settle } from "x402/facilitator";
-import { getUsdcAddressForChain } from "../utils/usdc.js";
+} from "x402/types";
+import { useFacilitator } from "x402/verify";
 
 interface ITools {
   signTransaction(
@@ -50,22 +49,35 @@ export class PaymentsTools implements ITools {
         chain: baseSepolia,
         transport: http(),
         account: privateKeyToAccount(privateKey as Hex),
-      }).extend(publicActions) as SignerWallet;
+      }).extend(publicActions) as any;
 
-      const paymentDetails: PaymentDetails = {
+      const atomicAmountForAsset = processPriceToAtomicAmount(
+        amount,
+        "base-sepolia"
+      );
+      if ("error" in atomicAmountForAsset) {
+        throw new Error(atomicAmountForAsset.error);
+      }
+      const { maxAmountRequired, asset } = atomicAmountForAsset;
+
+      const paymentDetails: PaymentRequirements = {
         scheme: "exact",
-        networkId: "84532",
-        maxAmountRequired: BigInt(amount * 10 ** 6),
+        network: "base-sepolia",
+        maxAmountRequired,
         resource,
         description: "Payment for order",
         mimeType: "application/json",
-        payToAddress: sellerWalletAddress,
-        requiredDeadlineSeconds: 3600,
-        usdcAddress: getUsdcAddressForChain(84532),
-        outputSchema: null,
-        extra: null,
+        payTo: sellerWalletAddress,
+        maxTimeoutSeconds: 300,
+        asset: asset.address,
+        outputSchema: undefined,
+        extra: asset?.eip712,
       };
-      const paymentHeader = await createPaymentHeader(wallet, paymentDetails);
+      const paymentHeader = await createPaymentHeader(
+        wallet,
+        1,
+        paymentDetails
+      );
 
       return paymentHeader;
     } catch (error: any) {
@@ -89,15 +101,14 @@ export class PaymentsTools implements ITools {
       facilitatorUrl = "https://x402.org/facilitator",
       paymentHeader,
       resource,
-      buyerWalletAddress
     }: {
-      facilitatorUrl: string;
+      facilitatorUrl: `${string}://${string}`;
       paymentHeader: string;
       resource: `${string}://${string}`;
-      buyerWalletAddress: string;
     }
-  ): Promise<{ success: boolean, message: string, responseHeader: string }> {
+  ): Promise<{ success: boolean; message: string; responseHeader: string }> {
     try {
+      const { verify, settle } = useFacilitator({ url: facilitatorUrl });
       const parsedAmount = moneySchema.safeParse(amount);
       if (!parsedAmount.success) {
         throw new Error(
@@ -105,47 +116,47 @@ export class PaymentsTools implements ITools {
         );
       }
 
-      const privateKey = `0x${buyerWalletAddress}`;
-
-      const wallet = createWalletClient({
-        chain: baseSepolia,
-        transport: http(),
-        account: privateKeyToAccount(privateKey as Hex),
-      }).extend(publicActions) as SignerWallet;
-
       if (!paymentHeader) {
         throw new Error("No payment header found");
       }
 
-      const paymentDetails: PaymentDetails = {
+      const atomicAmountForAsset = processPriceToAtomicAmount(
+        amount,
+        "base-sepolia"
+      );
+      if ("error" in atomicAmountForAsset) {
+        throw new Error(atomicAmountForAsset.error);
+      }
+      const { maxAmountRequired, asset } = atomicAmountForAsset;
+
+      const paymentDetails: PaymentRequirements = {
         scheme: "exact",
-        networkId: "84532",
-        maxAmountRequired: BigInt(parsedAmount.data * 10 ** 6),
+        network: "base-sepolia",
+        maxAmountRequired,
         resource,
         description: "Payment for order",
         mimeType: "application/json",
-        payToAddress: address,
-        requiredDeadlineSeconds: 3600,
-        usdcAddress: getUsdcAddressForChain(84532),
-        outputSchema: null,
-        extra: null,
+        payTo: address,
+        maxTimeoutSeconds: 300,
+        asset: asset.address,
+        outputSchema: undefined,
+        extra: asset?.eip712,
       };
 
+      const decodedPayment = exact.evm.decodePayment(paymentHeader);
+
       try {
-        const response = await verify(wallet, paymentHeader, paymentDetails);
+        const response = await verify(decodedPayment, paymentDetails);
         if (!response.isValid) {
           console.error("Invalid payment:", response.invalidReason);
           return {
             success: false,
-            message: response.invalidReason || 'Invalid payment',
+            message: response.invalidReason || "Invalid payment",
             responseHeader: "",
           };
         }
       } catch (error: any) {
-        console.error(
-          "Error during payment verification:",
-          error
-        );
+        console.error("Error during payment verification:", error);
         return {
           success: false,
           message: "Error during payment verification",
@@ -154,8 +165,8 @@ export class PaymentsTools implements ITools {
       }
 
       try {
-        const settleResponse = await settle(wallet, paymentHeader, paymentDetails);
-        const responseHeader = settleResponseHeader(settleResponse);
+        const settlement = await settle(decodedPayment, paymentDetails);
+        const responseHeader = settleResponseHeader(settlement);
         return {
           success: true,
           message: "Payment settled successfully",
@@ -170,7 +181,11 @@ export class PaymentsTools implements ITools {
         };
       }
     } catch (error: any) {
-      return { message: "Error: " + error.message, success: false, responseHeader: "" };
+      return {
+        message: "Error during payment verification: " + error.message,
+        success: false,
+        responseHeader: "",
+      };
     }
   }
 }
