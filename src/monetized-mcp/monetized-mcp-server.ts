@@ -3,6 +3,9 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express, { Request, Response } from "express";
 import { z } from "zod";
 import { PaymentMethods } from "../payments/payment-method.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export type PricingListingItem = {
   name?: string;
@@ -217,8 +220,8 @@ export abstract class MonetizedMCPServer {
       }
     });
 
-    app.listen(3020, () => {
-      console.error("MCP Server listening on port 3020");
+    app.listen(process.env.PORT || 8080, () => {
+      console.error(`MCP Server listening on port ${process.env.PORT || 8080}`);
     });
   }
 }
