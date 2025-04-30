@@ -26,16 +26,6 @@ export type PaymentMethodResponse = {
   paymentMethod: PaymentMethods;
 };
 
-export type PlaceOrderRequest = {
-  items: PricingListingItem[];
-};
-
-export type PlaceOrderResponse = {
-  items: PricingListingItem[];
-  orderId: string;
-  totalPrice: number;
-};
-
 export type PurchaseResponse = {
   items: PricingListingItem[];
   purchaseRequest: PurchaseRequest;
@@ -99,37 +89,6 @@ export abstract class MonetizedMCPServer {
       }
     });
     this.server.tool(
-      "place-order",
-      {
-        items: z.array(
-          z.object({
-            name: z.string().min(1),
-            description: z.string().min(1),
-            price: z.number().min(0),
-            currency: z.string().min(1),
-            params: z.record(z.string(), z.any()),
-          })
-        ),
-      },
-      async ({ items }) => {
-        try {
-          const purchase = await this.placeOrder({ items });
-          return {
-            content: [{ type: "text", text: JSON.stringify(purchase) }],
-          };
-        } catch (error: any) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Error placing order: ${error.message}`,
-              },
-            ],
-          };
-        }
-      }
-    );
-    this.server.tool(
       "make-purchase",
       {
         items: z.array(
@@ -154,27 +113,16 @@ export abstract class MonetizedMCPServer {
         paymentMethod,
       }) => {
         try {
-          // const paymentTools = new PaymentsTools();
-          // const result = await paymentTools.sendPayment(
-          //   totalPrice,
-          //   buyerAccountId,
-          //   paymentMethod,
-          //   signedTransaction
-          // );
-          if (true) {
-            const purchase = await this.makePurchase({
-              items,
-              totalPrice,
-              buyerAccountId,
-              signedTransaction,
-              paymentMethod,
-            });
-            return {
-              content: [{ type: "text", text: JSON.stringify(purchase) }],
-            };
-          } else {
-            throw new Error("Error making purchase");
-          }
+          const purchase = await this.makePurchase({
+            items,
+            totalPrice,
+            buyerAccountId,
+            signedTransaction,
+            paymentMethod,
+          });
+          return {
+            content: [{ type: "text", text: JSON.stringify(purchase) }],
+          };
         } catch (error: any) {
           return {
             content: [
@@ -191,9 +139,6 @@ export abstract class MonetizedMCPServer {
 
   abstract pricingListing(): Promise<PricingListingResponse>;
   abstract paymentMethod(): Promise<PaymentMethodResponse[]>;
-  abstract placeOrder(
-    placeOrderRequest: PlaceOrderRequest
-  ): Promise<PlaceOrderResponse>;
   abstract makePurchase(
     purchaseRequest: PurchaseRequest
   ): Promise<PurchaseResponse>;

@@ -1,8 +1,6 @@
 import {
   MonetizedMCPServer,
   PaymentMethodResponse,
-  PlaceOrderRequest,
-  PlaceOrderResponse,
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
@@ -20,11 +18,6 @@ const s3Client = new S3Client({
 });
 
 export class MCPServer extends MonetizedMCPServer {
-  placeOrder(
-    placeOrderRequest: PlaceOrderRequest
-  ): Promise<PlaceOrderResponse> {
-    throw new Error("Method not implemented.");
-  }
   pricingListing(): Promise<PricingListingResponse> {
     return Promise.resolve({
       items: [
