@@ -1,8 +1,14 @@
 {
   "name": "monetized-mcp",
-  "version": "0.1.45",
+  "version": "0.1.55",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "types": "./dist/main.d.ts"
+    }
+  },
   "bin": {
     "monetized-mcp": "dist/main.js"
   },
@@ -11,24 +17,28 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npx tsc src/main.ts --outDir dist --declaration --declarationMap"
+    "build": "npx tsc --outDir dist",
+    "test": "vitest --testTimeout=30000",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
     "axios": "^1.8.4",
+    "dotenv": "^16.5.0",
     "express": "^4.19.2",
     "hono": "^4.7.2",
     "jest": "^29.7.0",
     "viem": "^2.23.5",
     "web3": "^4.5.0",
     "web3-eth-accounts": "^4.3.1",
-    "x402": "^0.1.2",
+    "x402": "^0.2.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.17.30",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^1.3.1"
   },
   "description": "A TypeScript utility library for handling payments.",
   "repository": {

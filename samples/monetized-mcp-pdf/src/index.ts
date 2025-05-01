@@ -1,12 +1,10 @@
 import {
   MonetizedMCPServer,
   PaymentMethodResponse,
-  PlaceOrderRequest,
-  PlaceOrderResponse,
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
-} from "../../../src/main.js";
+} from "monetized-mcp";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import axios from "axios";
@@ -20,11 +18,6 @@ const s3Client = new S3Client({
 });
 
 export class MCPServer extends MonetizedMCPServer {
-  placeOrder(
-    placeOrderRequest: PlaceOrderRequest
-  ): Promise<PlaceOrderResponse> {
-    throw new Error("Method not implemented.");
-  }
   pricingListing(): Promise<PricingListingResponse> {
     return Promise.resolve({
       items: [
