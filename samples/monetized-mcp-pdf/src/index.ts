@@ -4,7 +4,7 @@ import {
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
-} from "../../../src/main.js";
+} from "monetized-mcp";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import axios from "axios";
