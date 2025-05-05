@@ -1,6 +1,7 @@
 import {
   MonetizedMCPServer,
   PaymentMethodResponse,
+  PaymentsTools,
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
@@ -47,6 +48,16 @@ export class MCPServer extends MonetizedMCPServer {
     purchaseRequest: PurchaseRequest
   ): Promise<PurchaseResponse> {
     try {
+      const paymentTools = new PaymentsTools();
+      await paymentTools.verifyPayment(
+        purchaseRequest.totalPrice,
+        "0x069B0687C879b8E9633fb9BFeC3fea684bc238D5",
+        {
+          facilitatorUrl: "https://x402.org/facilitator",
+          paymentHeader: purchaseRequest.signedTransaction,
+          resource: "http://example.com",
+        }
+      );
       const pdfBuffers: Buffer[] = [];
       const s3Urls: string[] = [];
 
@@ -78,7 +89,7 @@ export class MCPServer extends MonetizedMCPServer {
         s3Urls.push(s3Url);
       }
 
-      return Promise.resolve({
+      return {
         items: [
           {
             name: "Convert to PDF",
@@ -93,10 +104,15 @@ export class MCPServer extends MonetizedMCPServer {
         toolResult: JSON.stringify({
           pdfs: s3Urls.map(url => ({ type: "pdf", url })),
         }),
-      });
-    } catch (error) {
-      console.error(error);
-      throw error;
+      };
+    } catch (error: any) {
+      console.log("Error making purchase", error);
+      return {
+        items: [],
+        purchaseRequest: purchaseRequest,
+        orderId: "",
+        toolResult: JSON.stringify({ error: error.message }),
+      };
     }
   }
   constructor() {

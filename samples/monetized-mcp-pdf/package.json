@@ -10,7 +10,7 @@
   "type": "module",
   "dependencies": {
     "axios": "^1.8.4",
-    "monetized-mcp": "0.1.55",
+    "monetized-mcp": "0.1.57",
     "@aws-sdk/client-s3": "^3.0.0"
   },
   "devDependencies": {

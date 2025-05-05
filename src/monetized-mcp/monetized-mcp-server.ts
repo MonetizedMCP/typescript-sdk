@@ -36,7 +36,6 @@ export type PurchaseResponse = {
 export type PurchaseRequest = {
   items: PricingListingItem[];
   totalPrice: number;
-  buyerAccountId: string;
   signedTransaction: string;
   paymentMethod: PaymentMethods;
 };
@@ -116,7 +115,6 @@ export abstract class MonetizedMCPServer {
           const purchase = await this.makePurchase({
             items,
             totalPrice,
-            buyerAccountId,
             signedTransaction,
             paymentMethod,
           });
@@ -144,29 +142,42 @@ export abstract class MonetizedMCPServer {
   ): Promise<PurchaseResponse>;
 
   public async runMonetizeMCPServer() {
+    console.log("Starting monetized MCP server");
     const transports: { [sessionId: string]: SSEServerTransport } = {};
 
     app.get("/sse", async (_: Request, res: Response) => {
-      const transport = new SSEServerTransport("/messages", res);
-      transports[transport.sessionId] = transport;
-      res.on("close", () => {
-        delete transports[transport.sessionId];
-      });
-      await this.server.connect(transport);
+      try {
+        console.log("New SSE connection");
+        const transport = new SSEServerTransport("/messages", res);
+        transports[transport.sessionId] = transport;
+        res.on("close", () => {
+          delete transports[transport.sessionId];
+        });
+        await this.server.connect(transport);
+      } catch (error: any) {
+        console.log("Error handling SSE connection", error);
+        res.status(500).send(`Error handling message: ${error.message}`);
+      }
     });
 
     app.post("/messages", async (req: Request, res: Response) => {
-      const sessionId = req.query.sessionId as string;
-      const transport = transports[sessionId];
-      if (transport) {
-        await transport.handlePostMessage(req, res);
-      } else {
-        res.status(400).send("No transport found for sessionId");
+      try {
+        console.log("New message");
+        const sessionId = req.query.sessionId as string;
+        const transport = transports[sessionId];
+        if (transport) {
+          await transport.handlePostMessage(req, res);
+        } else {
+          res.status(400).send("No transport found for sessionId");
+        }
+      } catch (error: any) {
+        console.log("Error handling message", error);
+        res.status(500).send(`Error handling message: ${error.message}`);
       }
     });
 
     app.listen(process.env.PORT || 8080, () => {
-      console.error(`MCP Server listening on port ${process.env.PORT || 8080}`);
+      console.log(`MCP Server listening on port ${process.env.PORT || 8080}`);
     });
   }
 }
