@@ -12,8 +12,8 @@ dependencies:
     specifier: ^1.8.4
     version: 1.8.4
   monetized-mcp:
-    specifier: 0.1.57
-    version: 0.1.57(@types/node@20.17.30)(typescript@5.8.3)
+    specifier: 0.1.58
+    version: 0.1.58(@types/node@20.17.30)(typescript@5.8.3)
 
 devDependencies:
   '@types/express':
@@ -3976,8 +3976,8 @@ packages:
       brace-expansion: 1.1.11
     dev: false
 
-  /monetized-mcp@0.1.57(@types/node@20.17.30)(typescript@5.8.3):
-    resolution: {integrity: sha512-BPbPi5NjpmJ74CHlHW3xqfmzYHhg1WnwcC6Y9LMCSJVNijn/t/6gPXmGxPzHomb4OTfc4bjQXvvzxvNWq0krNg==}
+  /monetized-mcp@0.1.58(@types/node@20.17.30)(typescript@5.8.3):
+    resolution: {integrity: sha512-iqK4Gt9PxbvxFSh80gJaeokHLGLZTqlxbT5UJloBrDSPiB16XBY9uIJ88NpFpY707/53785UxUdGeKecWU9rNw==}
     hasBin: true
     dependencies:
       '@modelcontextprotocol/sdk': 1.10.2

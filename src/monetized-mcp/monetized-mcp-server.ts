@@ -15,6 +15,10 @@ export type PricingListingItem = {
   params?: Record<string, any>;
 };
 
+export type PricingListingRequest = {
+  searchQuery?: string;
+};
+
 export type PricingListingResponse = {
   items: PricingListingItem[];
 };
@@ -53,12 +57,14 @@ export abstract class MonetizedMCPServer {
   }
 
   private registerMonetizeTools() {
-    this.server.tool("pricing-listing", {}, async () => {
-      try {
-        const pricingListing = await this.pricingListing();
-        return {
-          content: [{ type: "text", text: JSON.stringify(pricingListing) }],
-        };
+    this.server.tool("pricing-listing", {
+      searchQuery: z.string().optional(),
+    }, async ({ searchQuery }) => {
+        try {
+          const pricingListing = await this.pricingListing({ searchQuery });
+          return {
+            content: [{ type: "text", text: JSON.stringify(pricingListing) }],
+          };
       } catch (error: any) {
         return {
           content: [
@@ -135,7 +141,7 @@ export abstract class MonetizedMCPServer {
     );
   }
 
-  abstract pricingListing(): Promise<PricingListingResponse>;
+  abstract pricingListing(pricingListingRequest: PricingListingRequest): Promise<PricingListingResponse>;
   abstract paymentMethod(): Promise<PaymentMethodResponse[]>;
   abstract makePurchase(
     purchaseRequest: PurchaseRequest

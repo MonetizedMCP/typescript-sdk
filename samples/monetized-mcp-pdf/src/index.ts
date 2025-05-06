@@ -5,6 +5,7 @@ import {
   PricingListingResponse,
   PurchaseRequest,
   PurchaseResponse,
+  PricingListingRequest,
 } from "monetized-mcp";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
@@ -19,7 +20,9 @@ const s3Client = new S3Client({
 });
 
 export class MCPServer extends MonetizedMCPServer {
-  pricingListing(): Promise<PricingListingResponse> {
+  pricingListing({
+    searchQuery,
+  }: PricingListingRequest): Promise<PricingListingResponse> {
     return Promise.resolve({
       items: [
         {
@@ -31,7 +34,11 @@ export class MCPServer extends MonetizedMCPServer {
             websiteUrl: "Example: https://en.wikipedia.org/wiki/PDF",
           },
         },
-      ],
+      ].filter(
+        (item) =>
+          !searchQuery ||
+          item.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
     });
   }
   paymentMethod(): Promise<PaymentMethodResponse[]> {
@@ -76,7 +83,9 @@ export class MCPServer extends MonetizedMCPServer {
         pdfBuffers.push(pdfBuffer);
 
         // Upload to S3
-        const fileName = `pdf-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`;
+        const fileName = `pdf-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.pdf`;
         const command = new PutObjectCommand({
           Bucket: process.env.AWS_S3_BUCKET!,
           Key: fileName,
@@ -102,7 +111,7 @@ export class MCPServer extends MonetizedMCPServer {
         purchaseRequest: purchaseRequest,
         orderId: "123",
         toolResult: JSON.stringify({
-          pdfs: s3Urls.map(url => ({ type: "pdf", url })),
+          pdfs: s3Urls.map((url) => ({ type: "pdf", url })),
         }),
       };
     } catch (error: any) {
