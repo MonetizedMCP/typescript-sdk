@@ -1,9 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import express, { Request, Response } from "express";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import dotenv from "dotenv";
+import express from "express";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { PaymentMethods } from "../payments/payment-method.js";
-import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -41,6 +43,7 @@ export type PurchaseRequest = {
 };
 
 const app = express();
+app.use(express.json());
 
 export abstract class MonetizedMCPServer {
   protected server: McpServer;
@@ -100,17 +103,10 @@ export abstract class MonetizedMCPServer {
           })
         ),
         totalPrice: z.number(),
-        buyerAccountId: z.string(),
         signedTransaction: z.string(),
         paymentMethod: z.nativeEnum(PaymentMethods),
       },
-      async ({
-        items,
-        totalPrice,
-        buyerAccountId,
-        signedTransaction,
-        paymentMethod,
-      }) => {
+      async ({ items, totalPrice, signedTransaction, paymentMethod }) => {
         try {
           const purchase = await this.makePurchase({
             items,
@@ -143,38 +139,57 @@ export abstract class MonetizedMCPServer {
 
   public async runMonetizeMCPServer() {
     console.log("Starting monetized MCP server");
-    const transports: { [sessionId: string]: SSEServerTransport } = {};
+    const transports: { [sessionId: string]: StreamableHTTPServerTransport } =
+      {};
 
-    app.get("/sse", async (_: Request, res: Response) => {
-      try {
-        console.log("New SSE connection");
-        const transport = new SSEServerTransport("/messages", res);
-        transports[transport.sessionId] = transport;
-        res.on("close", () => {
-          delete transports[transport.sessionId];
+    app.post("/mcp", async (req, res) => {
+      const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      let transport: StreamableHTTPServerTransport;
+
+      if (sessionId && transports[sessionId]) {
+        transport = transports[sessionId];
+      } else if (!sessionId && isInitializeRequest(req.body)) {
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sessionId) => {
+            transports[sessionId] = transport;
+          },
         });
+
+        transport.onclose = () => {
+          if (transport.sessionId) {
+            delete transports[transport.sessionId];
+          }
+        };
+
         await this.server.connect(transport);
-      } catch (error: any) {
-        console.log("Error handling SSE connection", error);
-        res.status(500).send(`Error handling message: ${error.message}`);
+      } else {
+        res.status(400).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32000,
+            message: "Bad Request: No valid session ID provided",
+          },
+          id: null,
+        });
+        return;
       }
+
+      await transport.handleRequest(req, res, req.body);
     });
 
-    app.post("/messages", async (req: Request, res: Response) => {
-      try {
-        console.log("New message");
-        const sessionId = req.query.sessionId as string;
-        const transport = transports[sessionId];
-        if (transport) {
-          await transport.handlePostMessage(req, res);
-        } else {
-          res.status(400).send("No transport found for sessionId");
-        }
-      } catch (error: any) {
-        console.log("Error handling message", error);
-        res.status(500).send(`Error handling message: ${error.message}`);
+    const handleSessionRequest = async (req: express.Request, res: express.Response) => {
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+      if (!sessionId || !transports[sessionId]) {
+        res.status(400).send('Invalid or missing session ID');
+        return;
       }
-    });
+      const transport = transports[sessionId];
+      await transport.handleRequest(req, res);
+    };
+
+    app.get("/mcp", handleSessionRequest);
+    app.delete("/mcp", handleSessionRequest);
 
     app.listen(process.env.PORT || 8080, () => {
       console.log(`MCP Server listening on port ${process.env.PORT || 8080}`);
