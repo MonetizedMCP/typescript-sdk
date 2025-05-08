@@ -1,50 +1,32 @@
+import { base, baseSepolia, Chain } from "viem/chains";
 import { PaymentMethods } from "./payment-method.js";
 
-/**
- * Enum representing different currencies supported by the system
- */
-export enum Currency {
-  ETH = 'ETH',
-  USDC = 'USDC',
-  USDT = 'USDT',
-  SOL = 'SOL'
-}
-
-/**
- * Mapping of currency details including decimals
- */
-export const CURRENCY_DETAILS: {
-  [key in Currency]: {
-    decimals: number;
-    isNative: boolean;
-  };
-} = {
-  [Currency.ETH]: {
-    decimals: 18,
-    isNative: true,
-  },
-  [Currency.USDC]: {
-    decimals: 6,
-    isNative: false,
-  },
-  [Currency.USDT]: {
-    decimals: 6,
-    isNative: false,
-  },
-  [Currency.SOL]: {
-    decimals: 9,
-    isNative: true,
+export const getChainFromPaymentMethod = (paymentMethod: PaymentMethods) => {
+  switch (paymentMethod) {
+    case PaymentMethods.USDC_BASE_SEPOLIA:
+      return baseSepolia;
+    case PaymentMethods.USDT_BASE_SEPOLIA:
+      return baseSepolia;
+    case PaymentMethods.ETH_BASE_SEPOLIA:
+      return baseSepolia;
+    case PaymentMethods.USDC_BASE_MAINNET:
+      return base;
+    case PaymentMethods.USDT_BASE_MAINNET:
+      return base;
+    case PaymentMethods.ETH_BASE_MAINNET:
+      return base;
+    default:
+      throw new Error(`Unsupported payment method: ${paymentMethod}`);
   }
 };
 
-/**
- * Mapping of payment method contract addresses for non-native tokens
- */
-export const PAYMENT_METHOD_ADDRESSES: {
-  [key in PaymentMethods]?: string;
-} = {
-  [PaymentMethods.USDC_BASE_SEPOLIA]: '0x6Ac3aB54Dc5019A2e57eCcb214337FF5bbD52897',
-  [PaymentMethods.USDT_BASE_SEPOLIA]: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
-  [PaymentMethods.USDC_BASE_MAINNET]: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  [PaymentMethods.USDT_BASE_MAINNET]: '0x9f8F72aA9304c8B593d5956a14795C37Eb9B8022',
+export const getNetworkFromChain = (chain: Chain) => {
+  switch (chain.id) {
+    case base.id:
+      return 'base';
+    case baseSepolia.id: 
+      return 'base-sepolia';
+    default:
+      throw new Error(`Unsupported chain: ${chain.name}`);
+  }
 };
