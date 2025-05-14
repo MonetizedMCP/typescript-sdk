@@ -66,7 +66,7 @@ export class PaymentsTools implements ITools {
 
       const paymentDetails: PaymentRequirements = {
         scheme: "exact",
-        network: "base-sepolia",
+        network: getNetworkFromChain(chain),
         maxAmountRequired,
         resource,
         description: "Payment for order",
