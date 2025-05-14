@@ -5,15 +5,7 @@ export const getChainFromPaymentMethod = (paymentMethod: PaymentMethods) => {
   switch (paymentMethod) {
     case PaymentMethods.USDC_BASE_SEPOLIA:
       return baseSepolia;
-    case PaymentMethods.USDT_BASE_SEPOLIA:
-      return baseSepolia;
-    case PaymentMethods.ETH_BASE_SEPOLIA:
-      return baseSepolia;
     case PaymentMethods.USDC_BASE_MAINNET:
-      return base;
-    case PaymentMethods.USDT_BASE_MAINNET:
-      return base;
-    case PaymentMethods.ETH_BASE_MAINNET:
       return base;
     default:
       throw new Error(`Unsupported payment method: ${paymentMethod}`);
