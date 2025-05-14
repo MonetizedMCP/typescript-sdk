@@ -3,6 +3,7 @@ import { PaymentsTools } from "../payments/payment-tools-x402.js";
 import { Address } from "viem";
 import { Money } from "x402/types";
 import dotenv from "dotenv";
+import { PaymentMethods } from "../payments/payment-method.js";
 dotenv.config();
 
 describe("PaymentTools X402 Integration Tests", () => {
@@ -18,7 +19,8 @@ describe("PaymentTools X402 Integration Tests", () => {
       amount,
       sellerAddress,
       buyerWalletPrivateKey,
-      resource
+      resource,
+      PaymentMethods.USDC_BASE_SEPOLIA
     );
 
     expect(paymentHeader).toBeDefined();
@@ -32,6 +34,7 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
+        paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA,
       }
     );
 
@@ -46,7 +49,8 @@ describe("PaymentTools X402 Integration Tests", () => {
       0.01,
       sellerAddress,
       buyerWalletPrivateKey,
-      resource
+      resource,
+      PaymentMethods.USDC_BASE_SEPOLIA
     );
 
     const verificationResult = await paymentTools.verifyPayment(
@@ -56,6 +60,7 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader,
         resource,
+        paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA,
       }
     );
 
@@ -71,6 +76,7 @@ describe("PaymentTools X402 Integration Tests", () => {
         facilitatorUrl: "https://x402.org/facilitator",
         paymentHeader: Buffer.from("{}").toString("base64"),
         resource,
+        paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA,
       }
     );
 

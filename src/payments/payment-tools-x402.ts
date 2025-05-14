@@ -1,6 +1,5 @@
 import { Address, createWalletClient, Hex, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
 import { createPaymentHeader } from "x402/client";
 import { exact } from "x402/schemes";
 import { processPriceToAtomicAmount } from "x402/shared";
@@ -11,13 +10,16 @@ import {
   settleResponseHeader,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
+import { getChainFromPaymentMethod, getNetworkFromChain } from "./currency.js";
+import { PaymentMethods } from "./payment-method.js";
 
 interface ITools {
   signTransaction(
     amount: number,
     sellerWalletAddress: string,
     buyerWalletAddress: string,
-    resource: `${string}://${string}`
+    resource: `${string}://${string}`,
+    paymentMethod: PaymentMethods
   ): Promise<string>;
   verifyPayment(
     amount: Money,
@@ -41,19 +43,21 @@ export class PaymentsTools implements ITools {
     amount: number,
     sellerWalletAddress: string,
     buyerWalletAddress: string,
-    resource: `${string}://${string}`
+    resource: `${string}://${string}`,
+    paymentMethod: PaymentMethods
   ): Promise<string> {
     try {
       const privateKey = `0x${buyerWalletAddress}`;
+      const chain = getChainFromPaymentMethod(paymentMethod);
       const wallet = createWalletClient({
-        chain: baseSepolia,
+        chain,
         transport: http(),
         account: privateKeyToAccount(privateKey as Hex),
       }).extend(publicActions) as any;
 
       const atomicAmountForAsset = processPriceToAtomicAmount(
         amount,
-        "base-sepolia"
+        getNetworkFromChain(chain)
       );
       if ("error" in atomicAmountForAsset) {
         throw new Error(atomicAmountForAsset.error);
@@ -62,7 +66,7 @@ export class PaymentsTools implements ITools {
 
       const paymentDetails: PaymentRequirements = {
         scheme: "exact",
-        network: "base-sepolia",
+        network: getNetworkFromChain(chain),
         maxAmountRequired,
         resource,
         description: "Payment for order",
@@ -101,10 +105,12 @@ export class PaymentsTools implements ITools {
       facilitatorUrl = "https://x402.org/facilitator",
       paymentHeader,
       resource,
+      paymentMethod,
     }: {
       facilitatorUrl: `${string}://${string}`;
       paymentHeader: string;
       resource: `${string}://${string}`;
+      paymentMethod: PaymentMethods;
     }
   ): Promise<{ success: boolean; message: string; responseHeader: string }> {
     try {
@@ -119,10 +125,11 @@ export class PaymentsTools implements ITools {
       if (!paymentHeader) {
         throw new Error("No payment header found");
       }
+      const chain = getChainFromPaymentMethod(paymentMethod);
 
       const atomicAmountForAsset = processPriceToAtomicAmount(
         amount,
-        "base-sepolia"
+        getNetworkFromChain(chain)
       );
       if ("error" in atomicAmountForAsset) {
         throw new Error(atomicAmountForAsset.error);
@@ -131,7 +138,7 @@ export class PaymentsTools implements ITools {
 
       const paymentDetails: PaymentRequirements = {
         scheme: "exact",
-        network: "base-sepolia",
+        network: getNetworkFromChain(chain),
         maxAmountRequired,
         resource,
         description: "Payment for order",

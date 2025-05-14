@@ -1,6 +1,6 @@
 {
   "name": "monetized-mcp",
-  "version": "0.1.58",
+  "version": "0.1.63",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "exports": {
@@ -22,7 +22,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@modelcontextprotocol/sdk": "^1.11.0",
     "axios": "^1.8.4",
     "dotenv": "^16.5.0",
     "express": "^4.19.2",
