@@ -1,6 +1,7 @@
 {
-  "name": "monetized-mcp",
-  "version": "0.1.63",
+  "name": "monetizedmcp-sdk",
+  "version": "0.1.1",
+  "description": "A TypeScript utility library that enables MCP servers to receive programmatic payments. Visit monetizedmcp.org to learn more",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "exports": {
@@ -40,7 +41,6 @@
     "typescript": "^5.8.3",
     "vitest": "^1.3.1"
   },
-  "description": "A TypeScript utility library for handling payments.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MonetizedMCP/typescript-sdk.git"
