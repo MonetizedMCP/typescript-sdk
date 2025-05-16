@@ -1,14 +1,14 @@
-# TypeScript SDK for Base Sepolia Payments
+# TypeScript SDK for X402 Payments
 
-A TypeScript utility library for handling payments on the Base Sepolia testnet. This library provides tools for sending and verifying payments, supporting both native tokens and ERC20 tokens.
+A TypeScript utility library for handling payments using the X402 protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
 
 ## Features
 
-- Send payments in native tokens (ETH) and ERC20 tokens
-- Automatic gas estimation for transactions
-- Dynamic gas price calculation based on network conditions
-- Verify payment transactions
-- Support for Base Sepolia testnet
+- Sign transactions for X402 payments
+- Verify and settle payments using the X402 facilitator
+- Support for Base Sepolia testnet and Base Mainnet
+- Integration with Model Context Protocol (MCP) for monetized services
+- Support for USDC payments
 
 ## Installation
 
@@ -22,50 +22,84 @@ Set up your environment variables:
 
 ```bash
 LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
+LOCAL_WALLET_ADDRESS=your_wallet_address_here
 ```
 
 ## Usage
 
+### Basic Payment Operations
+
 ```typescript
-import { PaymentsTools, Currency } from '@fluora/typescript-sdk';
+import { PaymentsTools, PaymentMethods } from '@fluora/typescript-sdk';
 
 const payments = new PaymentsTools();
 
-// Send a payment
-const result = await payments.sendPayment(
-  0.1, // amount
-  '0x...', // destination address
-  '0x...', // sender address
-  Currency.ETH // currency
+// Sign a transaction
+const paymentHeader = await payments.signTransaction(
+  0.01, // amount
+  '0x...', // seller address
+  '0x...', // buyer private key
+  'https://example.com/resource', // resource URL
+  PaymentMethods.USDC_BASE_SEPOLIA // payment method
 );
 
-// Verify a payment
-const verification = await payments.verifyPayment(
-  '0x...', // transaction hash
-  0.1, // amount
-  Currency.ETH, // currency
-  '0x...' // destination address
+// Verify and settle a payment
+const verification = await payments.verifyAndSettlePayment(
+  "0.01", // amount as Money type
+  '0x...', // seller address
+  {
+    facilitatorUrl: 'https://x402.org/facilitator',
+    paymentHeader: paymentHeader,
+    resource: 'https://example.com/resource',
+    paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA
+  }
 );
 ```
 
-## Network
+### MCP Integration
 
-This SDK is configured to work with the Base Sepolia testnet:
-- RPC URL: `https://sepolia.base.org`
+```typescript
+import { MonetizedMCPServer } from '@fluora/typescript-sdk';
+
+class MyMCPServer extends MonetizedMCPServer {
+  async pricingListing({ searchQuery }: PricingListingRequest): Promise<PricingListingResponse> {
+    return {
+      items: [
+        {
+          name: "Service Name",
+          description: "Service Description",
+          price: 0.5,
+          currency: "USDC",
+          params: {
+            // Service-specific parameters
+          }
+        }
+      ]
+    };
+  }
+
+  async paymentMethod(): Promise<PaymentMethodResponse> {
+    return {
+      walletAddress: "0x...",
+      paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA
+    };
+  }
+
+  async makePurchase(request: MakePurchaseRequest): Promise<MakePurchaseResponse> {
+    // Implement purchase logic
+  }
+}
+```
+
+## Supported Networks
+
+### Base Sepolia Testnet
 - Chain ID: 84532
-- Native Currency: ETH
+- Supported Tokens: USDC
 
-## Gas Handling
-
-The SDK automatically handles gas calculations:
-- For native token transfers: Uses standard 21000 gas limit
-- For ERC20 token transfers: Estimates required gas based on contract interaction
-- Gas price is dynamically obtained from the current network conditions
-
-## Supported Currencies
-
-- Native token (ETH)
-- ERC20 tokens (USDC, etc.)
+### Base Mainnet
+- Chain ID: 8453
+- Supported Tokens: USDC
 
 ## API Reference
 
@@ -75,37 +109,87 @@ The SDK automatically handles gas calculations:
 ```typescript
 constructor()
 ```
-Initializes the PaymentsTools instance with Web3 connection to Base Sepolia.
+Initializes the PaymentsTools instance.
 
-#### `sendPayment`
+#### `signTransaction`
 ```typescript
-async sendPayment(
+async signTransaction(
   amount: number,
-  destinationWalletAddress: string,
-  localWalletAddress: string,
-  currency: Currency,
-  chain?: string
-): Promise<{ resultMessage: string; hash: string }>
+  sellerWalletAddress: string,
+  buyerWalletAddress: string,
+  resource: `${string}://${string}`,
+  paymentMethod: PaymentMethods
+): Promise<string>
 ```
-Sends a payment transaction with automatic gas calculation.
+Signs a transaction for X402 payment.
 
-#### `verifyPayment`
+#### `verifyAndSettlePayment`
 ```typescript
-async verifyPayment(
-  hash: string,
-  amount: number,
-  currency: Currency,
-  destinationWalletAddress: string
-): Promise<{ success: boolean; message: string }>
+async verifyAndSettlePayment(
+  amount: Money,
+  address: Address,
+  {
+    facilitatorUrl,
+    paymentHeader,
+    resource,
+    paymentMethod
+  }: {
+    facilitatorUrl: `${string}://${string}`;
+    paymentHeader: string;
+    resource: `${string}://${string}`;
+    paymentMethod: PaymentMethods;
+  }
+): Promise<{ success: boolean; message: string; responseHeader: string }>
 ```
-Verifies if a payment transaction was successful.
+Verifies and settles a payment using the X402 facilitator.
+
+### `MonetizedMCPServer` Class
+
+Abstract class for implementing monetized MCP services.
+
+#### `pricingListing`
+```typescript
+abstract pricingListing(
+  request: PricingListingRequest
+): Promise<PricingListingResponse>
+```
+Returns available items and their prices.
+
+#### `paymentMethod`
+```typescript
+abstract paymentMethod(): Promise<PaymentMethodResponse>
+```
+Returns payment method information.
+
+#### `makePurchase`
+```typescript
+abstract makePurchase(
+  request: MakePurchaseRequest
+): Promise<MakePurchaseResponse>
+```
+Handles the purchase process.
+
+## Types
+
+### PaymentMethods
+```typescript
+enum PaymentMethods {
+  USDC_BASE_SEPOLIA = 'USDC_BASE_SEPOLIA',
+  USDC_BASE_MAINNET = 'USDC_BASE_MAINNET'
+}
+```
+
+### Money
+```typescript
+type Money = string // Format: "0.01", "1.00", etc.
+```
 
 ## Future Improvements
 
-- Support for Base Mainnet
-- Additional token standards
+- Additional payment methods
 - Enhanced error handling
-- Gas optimization strategies
+- More network support
+- Additional token standards
 
 ## License
 
