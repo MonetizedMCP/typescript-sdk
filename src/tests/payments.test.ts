@@ -27,8 +27,8 @@ describe("PaymentTools X402 Integration Tests", () => {
     expect(typeof paymentHeader).toBe("string");
 
     // Step 2: Verify the payment
-    const verificationResult = await paymentTools.verifyPayment(
-      "0.01" as Money,
+    const verificationResult = await paymentTools.verifyAndSettlePayment(
+      0.01 as Money,
       sellerAddress,
       {
         facilitatorUrl: "https://x402.org/facilitator",
@@ -53,7 +53,7 @@ describe("PaymentTools X402 Integration Tests", () => {
       PaymentMethods.USDC_BASE_SEPOLIA
     );
 
-    const verificationResult = await paymentTools.verifyPayment(
+    const verificationResult = await paymentTools.verifyAndSettlePayment(
       "invalid" as Money,
       sellerAddress,
       {
@@ -69,7 +69,7 @@ describe("PaymentTools X402 Integration Tests", () => {
   });
 
   it("should fail verification with invalid payment header", async () => {
-    const verificationResult = await paymentTools.verifyPayment(
+    const verificationResult = await paymentTools.verifyAndSettlePayment(
       "0.01" as Money,
       sellerAddress,
       {

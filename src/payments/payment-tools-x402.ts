@@ -21,7 +21,7 @@ interface ITools {
     resource: `${string}://${string}`,
     paymentMethod: PaymentMethods
   ): Promise<string>;
-  verifyPayment(
+  verifyAndSettlePayment(
     amount: Money,
     address: Address,
     {
@@ -98,7 +98,7 @@ export class PaymentsTools implements ITools {
    *   - resultMessage: A string describing the transaction result or error
    *   - hash: The transaction hash if successful, empty string if failed
    */
-  async verifyPayment(
+  async verifyAndSettlePayment(
     amount: Money,
     address: Address,
     {
@@ -112,7 +112,7 @@ export class PaymentsTools implements ITools {
       resource: `${string}://${string}`;
       paymentMethod: PaymentMethods;
     }
-  ): Promise<{ success: boolean; message: string; responseHeader: string }> {
+  ): Promise<{ success: boolean; message: string; responseHeader: string; error?: string }> {
     try {
       const { verify, settle } = useFacilitator({ url: facilitatorUrl });
       const parsedAmount = moneySchema.safeParse(amount);
@@ -168,6 +168,7 @@ export class PaymentsTools implements ITools {
           success: false,
           message: "Error during payment verification",
           responseHeader: "",
+          error: error.message,
         };
       }
 
@@ -184,6 +185,7 @@ export class PaymentsTools implements ITools {
         return {
           success: false,
           message: "Settlement failed",
+          error: error.response.data,
           responseHeader: "",
         };
       }
@@ -191,6 +193,7 @@ export class PaymentsTools implements ITools {
       return {
         message: "Error during payment verification: " + error.message,
         success: false,
+        error: error.message,
         responseHeader: "",
       };
     }

@@ -9,41 +9,38 @@ import { PaymentMethods } from "../payments/payment-method.js";
 
 dotenv.config();
 
-export type PricingListingItem = {
-  name?: string;
+export type ItemPrice = {
+  amount: number;
+  paymentMethod: PaymentMethods;
+};
+export type PurchasableItem = {
+  id: string;
+  name: string;
   description?: string;
-  price?: number;
-  currency?: string;
+  price: ItemPrice;
   params?: Record<string, any>;
 };
-
-export type PricingListingRequest = {
+export type PriceListingRequest = {
   searchQuery?: string;
 };
-
-export type PricingListingResponse = {
-  items: PricingListingItem[];
+export type PriceListingResponse = {
+  items: PurchasableItem[];
 };
-
 export type PaymentMethodResponse = {
-  name: string;
-  description: string;
-  sellerAccountId: string;
+  walletAddress: string;
   paymentMethod: PaymentMethods;
 };
-
-export type PurchaseResponse = {
-  items: PricingListingItem[];
-  purchaseRequest: PurchaseRequest;
-  orderId: string;
-  toolResult: string;
-};
-
-export type PurchaseRequest = {
-  items: PricingListingItem[];
-  totalPrice: number;
+export type MakePurchaseRequest = {
+  itemId: string;
+  params: Record<string, any>;
   signedTransaction: string;
   paymentMethod: PaymentMethods;
+};
+export type MakePurchaseResponse = {
+  purchasableItemId: string;
+  makePurchaseRequest: MakePurchaseRequest;
+  orderId: string;
+  toolResult: string;
 };
 
 const app = express();
@@ -99,24 +96,16 @@ export abstract class MonetizedMCPServer {
     this.server.tool(
       "make-purchase",
       {
-        items: z.array(
-          z.object({
-            name: z.string().trim().min(1),
-            description: z.string().trim().min(1),
-            price: z.number().min(0),
-            currency: z.string().trim().min(1),
-            params: z.record(z.string(), z.any()),
-          })
-        ),
-        totalPrice: z.number(),
+        itemId: z.string(),
+        params: z.record(z.string(), z.any()),
         signedTransaction: z.string(),
         paymentMethod: z.nativeEnum(PaymentMethods),
       },
-      async ({ items, totalPrice, signedTransaction, paymentMethod }) => {
+      async ({ itemId, params, signedTransaction, paymentMethod }) => {
         try {
           const purchase = await this.makePurchase({
-            items,
-            totalPrice,
+            itemId,
+            params,
             signedTransaction,
             paymentMethod,
           });
@@ -137,11 +126,11 @@ export abstract class MonetizedMCPServer {
     );
   }
 
-  abstract pricingListing(pricingListingRequest: PricingListingRequest): Promise<PricingListingResponse>;
+  abstract pricingListing(pricingListingRequest: PriceListingRequest): Promise<PriceListingResponse>;
   abstract paymentMethod(): Promise<PaymentMethodResponse[]>;
   abstract makePurchase(
-    purchaseRequest: PurchaseRequest
-  ): Promise<PurchaseResponse>;
+    purchaseRequest: MakePurchaseRequest
+  ): Promise<MakePurchaseResponse>;
 
   public async runMonetizeMCPServer() {
     console.log("Starting monetized MCP server");
