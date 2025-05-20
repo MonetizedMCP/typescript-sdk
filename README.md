@@ -1,6 +1,6 @@
-# TypeScript SDK for X402 Payments
+# TypeScript SDK for Monetized MCPs
 
-A TypeScript utility library for handling payments using the X402 protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
+A TypeScript utility library for handling payments using the Fluora protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
 
 ## Features
 
