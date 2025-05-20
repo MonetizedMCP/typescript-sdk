@@ -1,6 +1,6 @@
 # TypeScript SDK for Monetized MCPs
 
-A TypeScript utility library for handling payments using the Fluora protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
+A TypeScript utility library for handling payments using the Monetized MCP protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
 
 ## Features
 
@@ -13,7 +13,7 @@ A TypeScript utility library for handling payments using the Fluora protocol. Th
 ## Installation
 
 ```bash
-npm install @fluora/typescript-sdk
+npm install @monetizedmcp-sdk
 ```
 
 ## Configuration
@@ -30,7 +30,7 @@ LOCAL_WALLET_ADDRESS=your_wallet_address_here
 ### Basic Payment Operations
 
 ```typescript
-import { PaymentsTools, PaymentMethods } from '@fluora/typescript-sdk';
+import { PaymentsTools, PaymentMethods } from '@monetizedmcp-sdk';
 
 const payments = new PaymentsTools();
 
@@ -59,7 +59,7 @@ const verification = await payments.verifyAndSettlePayment(
 ### MCP Integration
 
 ```typescript
-import { MonetizedMCPServer } from '@fluora/typescript-sdk';
+import { MonetizedMCPServer } from '@monetizedmcp-sdk';
 
 class MyMCPServer extends MonetizedMCPServer {
   async pricingListing({ searchQuery }: PricingListingRequest): Promise<PricingListingResponse> {
