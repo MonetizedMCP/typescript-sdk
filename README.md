@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 # TypeScript SDK for Monetized MCPs
 
 A TypeScript utility library for handling payments using the Monetized MCP protocol. This library provides tools for signing transactions and verifying payments, supporting both Base Sepolia testnet and Base Mainnet.
+=======
+# MonetizedMCP TypeScript SDK 
+A TypeScript utility library that enables MCP servers to receive programmatic payments. This library provides abstracts tool definitions for the 3 signature MonetizedMCP tools: price-listing, payment-methods, and make-purchase. It also contains methods signing transactions and verifying/settling payments. 
+>>>>>>> b271d78eab1c2b0930b5661359504529b67436c4
 
 ## Features
 
