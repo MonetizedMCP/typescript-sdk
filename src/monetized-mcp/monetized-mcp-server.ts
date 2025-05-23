@@ -26,7 +26,7 @@ export type PriceListingRequest = {
 export type PriceListingResponse = {
   items: PurchasableItem[];
 };
-export type PaymentMethodResponse = {
+export type PaymentMethodsResponse = {
   walletAddress: string;
   paymentMethod: PaymentMethods;
 };
@@ -76,18 +76,18 @@ export abstract class MonetizedMCPServer {
         };
       }
     });
-    this.server.tool("payment-method", {}, async () => {
+    this.server.tool("payment-methods", {}, async () => {
       try {
-        const paymentMethod = await this.paymentMethod();
+        const paymentMethods = await this.paymentMethods();
         return {
-          content: [{ type: "text", text: JSON.stringify(paymentMethod) }],
+          content: [{ type: "text", text: JSON.stringify(paymentMethods) }],
         };
       } catch (error: any) {
         return {
           content: [
             {
               type: "text",
-              text: `Error getting payment method: ${error.message}`,
+              text: `Error getting payment methods: ${error.message}`,
             },
           ],
         };
@@ -127,7 +127,7 @@ export abstract class MonetizedMCPServer {
   }
 
   abstract pricingListing(pricingListingRequest: PriceListingRequest): Promise<PriceListingResponse>;
-  abstract paymentMethod(): Promise<PaymentMethodResponse[]>;
+  abstract paymentMethods(): Promise<PaymentMethodsResponse[]>;
   abstract makePurchase(
     purchaseRequest: MakePurchaseRequest
   ): Promise<MakePurchaseResponse>;
