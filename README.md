@@ -94,14 +94,14 @@ class MyMCPServer extends MonetizedMCPServer {
 }
 ```
 
-## Supported Networks
+## Supported Payment Networks 
 
 ### Base Sepolia Testnet
-- Chain ID: 84532
+- Contract Address: 0x036CbD53842c5426634e7929541eC2318f3dCF7e
 - Supported Tokens: USDC
 
 ### Base Mainnet
-- Chain ID: 8453
+- Contract Address: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 - Supported Tokens: USDC
 
 ## API Reference
