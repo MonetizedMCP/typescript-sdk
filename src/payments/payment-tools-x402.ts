@@ -10,6 +10,7 @@ import {
   settleResponseHeader,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
+import { facilitator } from "@coinbase/x402";
 import { getChainFromPaymentMethod, getNetworkFromChain } from "./currency.js";
 import { PaymentMethods } from "./payment-method.js";
 
@@ -114,7 +115,7 @@ export class PaymentsTools implements ITools {
     }
   ): Promise<{ success: boolean; message: string; responseHeader: string; error?: string }> {
     try {
-      const { verify, settle } = useFacilitator({ url: facilitatorUrl });
+      const { verify, settle } = useFacilitator(facilitator);
       const parsedAmount = moneySchema.safeParse(amount);
       if (!parsedAmount.success) {
         throw new Error(
