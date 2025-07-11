@@ -57,20 +57,20 @@ export abstract class MonetizedMCPServer {
   }
 
   private registerMonetizeTools() {
-    this.server.tool("pricing-listing", {
+    this.server.tool("price-listing", {
       searchQuery: z.string().optional(),
     }, async ({ searchQuery }) => {
         try {
-          const pricingListing = await this.pricingListing({ searchQuery });
+          const priceListing = await this.priceListing({ searchQuery });
           return {
-            content: [{ type: "text", text: JSON.stringify(pricingListing) }],
+            content: [{ type: "text", text: JSON.stringify(priceListing) }],
           };
       } catch (error: any) {
         return {
           content: [
             {
               type: "text",
-              text: `Error getting pricing listing: ${error.message}`,
+              text: `Error getting price listing: ${error.message}`,
             },
           ],
         };
@@ -126,7 +126,7 @@ export abstract class MonetizedMCPServer {
     );
   }
 
-  abstract pricingListing(pricingListingRequest: PriceListingRequest): Promise<PriceListingResponse>;
+  abstract priceListing(priceListingRequest: PriceListingRequest): Promise<PriceListingResponse>;
   abstract paymentMethods(): Promise<PaymentMethodsResponse[]>;
   abstract makePurchase(
     purchaseRequest: MakePurchaseRequest
