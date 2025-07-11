@@ -215,6 +215,10 @@ type Money = string; // Format: "0.01", "1.00", etc.
 - More network support
 - Additional token standards
 
+## Samples
+
+Check out our implementation of an monetized MCP server using [PDFShift](https://github.com/MonetizedMCP/monetized-mcp-sample).
+
 ## License
 
 MIT
