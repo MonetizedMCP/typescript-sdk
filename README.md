@@ -23,8 +23,6 @@ Set up your environment variables:
 ```bash
 LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
 LOCAL_WALLET_ADDRESS=your_wallet_address_here
-CDP_API_KEY_SECRET=your_api_key_secret_here
-CDP_API_KEY_ID=your_api_key_id_here
 ```
 
 You can get your CDP API key from the [Coinbase Developer Platform](https://portal.cdp.coinbase.com/).
