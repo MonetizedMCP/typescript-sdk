@@ -25,8 +25,6 @@ LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
 LOCAL_WALLET_ADDRESS=your_wallet_address_here
 ```
 
-You can get your CDP API key from the [Coinbase Developer Platform](https://portal.cdp.coinbase.com/).
-
 ## Usage
 
 ### Basic Payment Operations
