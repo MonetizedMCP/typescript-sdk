@@ -21,7 +21,6 @@ npm install monetizedmcp-sdk
 Set up your environment variables:
 
 ```bash
-LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
 LOCAL_WALLET_ADDRESS=your_wallet_address_here
 ```
 
@@ -223,6 +222,47 @@ For detailed instructions, refer to the [Fluora Local Testing Guide](https://www
 ## Samples
 
 Check out our implementation of a MonetizedMCP server using [PDFShift](https://github.com/MonetizedMCP/monetized-mcp-sample).
+
+## Troubleshooting
+
+### Common Issues
+
+#### ES Modules Configuration
+
+If you encounter module-related errors, ensure your project is using ES Modules:
+
+1. **Update `package.json`**:
+
+   ```json
+   {
+     "type": "module"
+   }
+   ```
+
+2. **Configure `tsconfig.json`**:
+   ```json
+   {
+     "compilerOptions": {
+       "target": "ESNext",
+       "module": "NodeNext",
+       "moduleResolution": "NodeNext"
+     }
+   }
+   ```
+
+#### Payment Verification Issues
+
+- Ensure you're using the correct network (Base Sepolia for testing, Base Mainnet for production)
+- Verify your wallet has sufficient USDC balance
+- Check that the facilitator URL is accessible
+
+#### MCP Server Connection
+
+- Confirm your server is running and accessible
+- Verify the MCP server URL is correct
+- Check that all required tools are properly implemented
+
+For additional help, open an issue in our repository.
 
 ## License
 
