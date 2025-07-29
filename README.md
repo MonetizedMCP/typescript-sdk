@@ -16,14 +16,6 @@ A TypeScript utility library that enables MCP servers to receive programmatic pa
 npm install monetizedmcp-sdk
 ```
 
-## Configuration
-
-Set up your environment variables:
-
-```bash
-LOCAL_WALLET_ADDRESS=your_wallet_address_here
-```
-
 ## Usage
 
 ### Basic Payment Operations
@@ -222,6 +214,35 @@ For detailed instructions, refer to the [Fluora Local Testing Guide](https://www
 ## Samples
 
 Check out our implementation of a MonetizedMCP server using [PDFShift](https://github.com/MonetizedMCP/monetized-mcp-sample).
+
+## Good Practices
+
+### Security Considerations
+
+When building your MonetizedMCP server, follow these security good practices:
+
+#### Environment Variable Management
+
+- **Keep sensitive data in environment variables**: Store your wallet private key and address as environment variables, never hardcode them in your source code
+- **Use a configuration file**: Create a config file that pulls from environment variables to reduce direct access to the environment
+- **Example configuration setup**:
+  ```typescript
+  // config.ts
+  export const config = {
+    wallet: {
+      privateKey: process.env.LOCAL_WALLET_PRIVATE_KEY!,
+      address: process.env.LOCAL_WALLET_ADDRESS!,
+    },
+    network: process.env.NETWORK || "base-sepolia",
+    facilitatorUrl:
+      process.env.FACILITATOR_URL || "https://x402.org/facilitator",
+  };
+  ```
+
+#### Network Configuration
+
+- **Test on testnets first**: Always test your implementation on Base Sepolia before deploying to mainnet
+- **Environment-specific configs**: Use different configurations for development, staging, and production
 
 ## Troubleshooting
 
