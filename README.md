@@ -53,6 +53,11 @@ const verification = await payments.verifyAndSettlePayment(
 import { MonetizedMCPServer } from "monetizedmcp-sdk";
 
 class MyMCPServer extends MonetizedMCPServer {
+  constructor() {
+    super();
+    super().runMonetizeMCPServer();
+  }
+
   async priceListing({
     searchQuery,
   }: PriceListingRequest): Promise<PriceListingResponse> {
