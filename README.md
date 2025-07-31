@@ -204,7 +204,6 @@ To test your MonetizedMCP server locally, follow these steps:
 
 For detailed instructions, refer to the [Fluora Local Testing Guide](https://www.fluora.ai/alpha/guides/local-testing-guide) and [Getting Started Guide](https://www.fluora.ai/alpha/getting-started).
 
-
 ## Tips
 
 #### Environment Variable Management
@@ -216,8 +215,7 @@ For detailed instructions, refer to the [Fluora Local Testing Guide](https://www
   // config.ts
   export const config = {
     apiKey: process.env.API_KEY || "",
-    facilitatorUrl:
-      process.env.FACILITATOR_URL || "https://x402.org/facilitator",
+    apiUrl: process.env.API_URL || "https://someapi/api",
   };
   ```
 
