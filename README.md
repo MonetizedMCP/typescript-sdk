@@ -180,7 +180,7 @@ Returns available items and their prices.
 #### `paymentMethod`
 
 ```typescript
-abstract paymentMethod(): Promise<PaymentMethodResponse>
+abstract paymentMethods(): Promise<PaymentMethodsResponse>
 ```
 
 Returns payment method information.
@@ -252,7 +252,9 @@ Check out our implementation of a MonetizedMCP server using [PDFShift](https://g
 - **Test on testnets first**: Always test your implementation on Base Sepolia before deploying to mainnet
 - **Environment-specific configs**: Use different configurations for development, staging, and production
 
-## Common Issues
+## Troubleshooting
+
+### Common Issues
 
 #### ES Modules Configuration
 
