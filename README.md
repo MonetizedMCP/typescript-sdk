@@ -66,7 +66,11 @@ class MyMCPServer extends MonetizedMCPServer {
         {
           name: "Service Name",
           description: "Service Description",
-          price: 0.5,
+          price: {
+            amount: 0.5,
+            // PaymentMethods.USDC_BASE_SEPOLIA or PaymentMethods.USDC_BASE_MAINNET
+            paymentMethod: ...
+          },
           currency: "USDC",
           params: {
             // Service-specific parameters
@@ -76,7 +80,7 @@ class MyMCPServer extends MonetizedMCPServer {
     };
   }
 
-  async paymentMethod(): Promise<PaymentMethodResponse> {
+  async paymentMethods(): Promise<PaymentMethodsResponse> {
     return {
       walletAddress: "0x...",
       paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA,
