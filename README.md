@@ -218,7 +218,7 @@ For detailed instructions, refer to the [Fluora Local Testing Guide](https://www
 #### Environment Variable Management
 
 - **Keep sensitive data in environment variables**
-- **Use a configuration file**: Create a config file that pulls from environment variables to reduce direct access to the environment
+- **Use a configuration file**: Create a config file that pulls from environment variables to reduce direct access to the environment and import them when it is needed.
 - **Example configuration setup**:
   ```typescript
   // config.ts
