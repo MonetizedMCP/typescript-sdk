@@ -16,6 +16,14 @@ A TypeScript utility library that enables MCP servers to receive programmatic pa
 npm install monetizedmcp-sdk
 ```
 
+## Configuration
+
+```bash
+# To use @coinbase/x402 facilitator
+CDP_API_KEY_ID=your_cdp_api_key_id
+CDP_API_KEY_SECRET=your_cdp_api_key_secret
+```
+
 ## Usage
 
 ### Basic Payment Operations
