@@ -18,11 +18,10 @@ npm install monetizedmcp-sdk
 
 ## Configuration
 
-Set up your environment variables:
-
 ```bash
-LOCAL_WALLET_PRIVATE_KEY=your_private_key_here
-LOCAL_WALLET_ADDRESS=your_wallet_address_here
+# To use @coinbase/x402 facilitator
+CDP_API_KEY_ID=your_cdp_api_key_id
+CDP_API_KEY_SECRET=your_cdp_api_key_secret
 ```
 
 ## Usage
@@ -62,6 +61,11 @@ const verification = await payments.verifyAndSettlePayment(
 import { MonetizedMCPServer } from "monetizedmcp-sdk";
 
 class MyMCPServer extends MonetizedMCPServer {
+  constructor() {
+    super();
+    super().runMonetizeMCPServer();
+  }
+
   async priceListing({
     searchQuery,
   }: PriceListingRequest): Promise<PriceListingResponse> {
@@ -70,7 +74,11 @@ class MyMCPServer extends MonetizedMCPServer {
         {
           name: "Service Name",
           description: "Service Description",
-          price: 0.5,
+          price: {
+            amount: 0.5,
+            // PaymentMethods.USDC_BASE_SEPOLIA or PaymentMethods.USDC_BASE_MAINNET
+            paymentMethod: ...
+          },
           currency: "USDC",
           params: {
             // Service-specific parameters
@@ -80,7 +88,7 @@ class MyMCPServer extends MonetizedMCPServer {
     };
   }
 
-  async paymentMethod(): Promise<PaymentMethodResponse> {
+  async paymentMethods(): Promise<PaymentMethodsResponse> {
     return {
       walletAddress: "0x...",
       paymentMethod: PaymentMethods.USDC_BASE_SEPOLIA,
@@ -172,7 +180,7 @@ Returns available items and their prices.
 #### `paymentMethod`
 
 ```typescript
-abstract paymentMethod(): Promise<PaymentMethodResponse>
+abstract paymentMethods(): Promise<PaymentMethodsResponse>
 ```
 
 Returns payment method information.
@@ -204,6 +212,30 @@ enum PaymentMethods {
 type Money = string; // Format: "0.01", "1.00", etc.
 ```
 
+## Testing your server locally
+
+To test your MonetizedMCP server locally, follow these steps:
+
+1. **Configure Claude Desktop** - Set up your development environment
+2. **Interact with your server** - Test the payment flow and functionality
+
+For detailed instructions, refer to the [Fluora Local Testing Guide](https://www.fluora.ai/alpha/guides/local-testing-guide) and [Getting Started Guide](https://www.fluora.ai/alpha/getting-started).
+
+## Tips
+
+#### Environment Variable Management
+
+- **Keep sensitive data in environment variables**
+- **Use a configuration file**: Create a config file that pulls from environment variables to reduce direct access to the environment and import them when it is needed.
+- **Example configuration setup**:
+  ```typescript
+  // config.ts
+  export const config = {
+    apiKey: process.env.API_KEY || "",
+    apiUrl: process.env.API_URL || "https://someapi/api",
+  };
+  ```
+
 ## Future Improvements
 
 - Additional payment methods
@@ -214,6 +246,52 @@ type Money = string; // Format: "0.01", "1.00", etc.
 ## Samples
 
 Check out our implementation of a MonetizedMCP server using [PDFShift](https://github.com/MonetizedMCP/monetized-mcp-sample).
+
+#### Network Configuration
+
+- **Test on testnets first**: Always test your implementation on Base Sepolia before deploying to mainnet
+- **Environment-specific configs**: Use different configurations for development, staging, and production
+
+## Troubleshooting
+
+### Common Issues
+
+#### ES Modules Configuration
+
+If you encounter module-related errors, ensure your project is using ES Modules:
+
+1. **Update `package.json`**:
+
+   ```json
+   {
+     "type": "module"
+   }
+   ```
+
+2. **Configure `tsconfig.json`**:
+   ```json
+   {
+     "compilerOptions": {
+       "target": "ESNext",
+       "module": "NodeNext",
+       "moduleResolution": "NodeNext"
+     }
+   }
+   ```
+
+#### Payment Verification Issues
+
+- Ensure you're using the correct network (Base Sepolia for testing, Base Mainnet for production)
+- Verify your wallet has sufficient USDC balance
+- Check that the facilitator URL is accessible
+
+#### MCP Server Connection
+
+- Confirm your server is running and accessible
+- Verify the MCP server URL is correct
+- Check that all required tools are properly implemented
+
+For additional help, open an issue in our repository.
 
 ## License
 
