@@ -333,6 +333,6 @@ This enables seamless migration of existing agent services into a monetized envi
   }
 }
 
-## License
+### License
 
 MIT
