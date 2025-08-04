@@ -293,6 +293,46 @@ If you encounter module-related errors, ensure your project is using ES Modules:
 
 For additional help, open an issue in our repository.
 
+## Vibe Integration
+
+If you're using a [Vibe](https://www.vibe.xyz/) coding tool to create or modify a MonetizedMCP server, the integration is designed to automatically expose your service logic as monetized tools.
+
+### 🛠 When Creating a New MonetizedMCP Server
+
+When you generate a new MonetizedMCP server using a Vibe tool:
+
+- Each **endpoint** or **API method** you define will be exposed as a separate entry in the `priceListing` tool.
+- The **parameters** required by the endpoint will be mapped automatically to the `params` field of each price listing entry.
+- Pricing, metadata, and payment method support can be added inline or configured via the Vibe interface.
+
+This allows you to instantly launch a monetized service where agents can discover and call your endpoints programmatically with payment.
+
+### 🔄 When Converting an Existing MCP Server
+
+If you use a Vibe tool to **convert an existing MCP server** into a MonetizedMCP server:
+
+- Each existing MCP **tool** (i.e. RPC method) will be listed as an entry in the `priceListing` tool.
+- Vibe will preserve tool names, schemas, and descriptions, and append pricing and monetization metadata.
+- Parameters will be preserved as-is, and you’ll be able to set pricing options directly within Vibe.
+
+This enables seamless migration of existing agent services into a monetized environment with minimal changes to your code.
+
+### 📦 Example Generated Price Listing Entry
+
+```json
+{
+  "name": "getSummary",
+  "description": "Returns a summary of a document",
+  "price": {
+    "amount": 0.25,
+    "paymentMethod": "USDC_BASE_SEPOLIA"
+  },
+  "currency": "USDC",
+  "params": {
+    "documentUrl": "https://example.com/doc.pdf"
+  }
+}
+
 ## License
 
 MIT
