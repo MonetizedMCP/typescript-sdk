@@ -325,13 +325,14 @@ This enables seamless migration of existing agent services into a monetized envi
   "description": "Returns a summary of a document",
   "price": {
     "amount": 0.25,
-    "paymentMethod": "USDC_BASE_SEPOLIA"
+    "currency": "USDC"
   },
-  "currency": "USDC",
+  "paymentMethod": "USDC_BASE_SEPOLIA",
   "params": {
     "documentUrl": "https://example.com/doc.pdf"
   }
-}```
+}
+```
 
 ### License
 
