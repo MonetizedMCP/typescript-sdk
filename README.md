@@ -295,7 +295,7 @@ For additional help, open an issue in our repository.
 
 ## Vibe Integration
 
-If you're using a [Vibe](https://www.vibe.xyz/) coding tool to create or modify a MonetizedMCP server, the integration is designed to automatically expose your service logic as monetized tools.
+If you're using a Vibe coding tool (like Cursor, VS Code, or Claude Code)  to create or modify a MonetizedMCP server, this integration is designed to automatically expose your service logic as monetized tools.
 
 ### 🛠 When Creating a New MonetizedMCP Server
 
