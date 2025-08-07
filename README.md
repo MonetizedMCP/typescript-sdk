@@ -219,7 +219,7 @@ To test your MonetizedMCP server locally, follow these steps:
 1. **Configure Claude Desktop** - Set up your development environment
 2. **Interact with your server** - Test the payment flow and functionality
 
-For detailed instructions, refer to the [Fluora Local Testing Guide](https://www.fluora.ai/alpha/guides/local-testing-guide) and [Getting Started Guide](https://www.fluora.ai/alpha/getting-started).
+For detailed instructions, refer to the [Fluora Local Testing Guide](https://www.fluora.ai/guides/local-testing-guide) and [Getting Started Guide](https://www.fluora.ai/getting-started).
 
 ## Tips
 
