@@ -236,6 +236,15 @@ For detailed instructions, refer to the [Fluora Local Testing Guide](https://www
   };
   ```
 
+#### Handling free items
+
+The [x402](https://www.x402.org/) protocol stablishes a minimum requirement to proceed with a transaction (amount $\geq$ 0.0001). In the cases where you need to handle free items (amount = 0), you can easily bypass the protocol by changing the logic:
+
+1. Prepare the data to return first
+2. Check for the item's price:
+   - If over 0, proceed with verification and settlement of the payment before returning the data
+   - Otherwise, return the data
+
 ## Future Improvements
 
 - Additional payment methods
