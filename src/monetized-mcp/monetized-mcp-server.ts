@@ -40,7 +40,7 @@ export type MakePurchaseResponse = {
   purchasableItemId: string;
   makePurchaseRequest: MakePurchaseRequest;
   orderId: string;
-  toolResult: string;
+  toolResult: Record<string, any>;
 };
 
 const app = express();
